@@ -1,0 +1,21 @@
+# ==============================================================================
+# Render Blueprint Specification for VeritasVideo AI Forensic Studio
+# Docs: https://render.com/docs/blueprint-spec
+# ==============================================================================
+services:
+  - type: web
+    name: veritasvideo-detector
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: GEMINI_API_KEY
+        sync: false # Set in Render Dashboard for optional multimodal vision reasoning

@@ -1,0 +1,31 @@
+# Virtual environment
+.venv/
+venv/
+ENV/
+env/
+
+# Python cache & compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+
+# Local cache & uploaded user temporary files
+cache/uploads/*
+cache/*/
+!cache/.gitkeep
+
+# Temporary test datasets
+tests/test_dataset/
+
+# OS specific files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE & Editor files
+.vscode/
+.idea/
+*.swp
+*.swo

@@ -1,0 +1,25 @@
+# Version control
+.git
+.gitignore
+
+# Python virtual environment and bytecode
+.venv/
+venv/
+ENV/
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Local cache & uploaded user files
+cache/uploads/*
+cache/*/
+!cache/.gitkeep
+
+# Operating system files
+.DS_Store
+Thumbs.db
+
+# Local scripts
+run.bat
+run.ps1

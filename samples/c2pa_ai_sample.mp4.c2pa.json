@@ -1,0 +1,27 @@
+{
+  "active_manifest": "urn:c2pa:openai_sora_video_sample_manifest",
+  "manifests": {
+    "urn:c2pa:openai_sora_video_sample_manifest": {
+      "claim_generator": "OpenAI Sora v1.0",
+      "format": "video/mp4",
+      "signature_info": {
+        "issuer": "OpenAI, LLC - Sora Video Content Credentials",
+        "time": "2026-09-01T12:00:00Z"
+      },
+      "assertions": [
+        {
+          "label": "c2pa.actions",
+          "data": {
+            "actions": [
+              {
+                "action": "c2pa.created",
+                "softwareAgent": "OpenAI Sora (Turbulence Latent Generator)",
+                "digitalSourceType": "http://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}
