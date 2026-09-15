@@ -13,6 +13,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from engine import ForensicEngine
 
 from contextlib import asynccontextmanager
+from dotenv import load_dotenv
 
 # Paths
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -20,6 +21,9 @@ PROJECT_DIR = os.path.dirname(BASE_DIR)
 CACHE_DIR = os.path.join(PROJECT_DIR, "cache")
 FRONTEND_DIR = os.path.join(PROJECT_DIR, "frontend")
 SAMPLES_DIR = os.path.join(PROJECT_DIR, "samples")
+
+# Load environment variables from .env file
+load_dotenv(os.path.join(PROJECT_DIR, ".env"))
 
 os.makedirs(CACHE_DIR, exist_ok=True)
 os.makedirs(SAMPLES_DIR, exist_ok=True)
