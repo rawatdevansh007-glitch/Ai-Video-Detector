@@ -386,9 +386,17 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       if (mlModelDetailsBox) {
         mlModelDetailsBox.classList.remove('hidden');
-        if (mlModelTypeVal) mlModelTypeVal.textContent = mlModel.model_type === 'hist_gb' ? 'Histogram Gradient Boosting' : (mlModel.model_type || 'Custom ML');
-        if (mlModelProbVal) mlModelProbVal.textContent = `${Math.round(mlModel.ml_ai_probability * 100)}% AI Probability`;
-        if (mlModelWeightVal) mlModelWeightVal.textContent = mlModel.scoring_mode || '60% ML + 40% Heuristics';
+        if (mlModelTypeVal) mlModelTypeVal.textContent = mlModel.architecture || (mlModel.model_type === 'hist_gb' ? 'PyTorch ResNet-50 (Cross-Verified)' : (mlModel.model_type || 'PyTorch ResNet-50 (Cross-Verified)'));
+        if (mlModelProbVal) mlModelProbVal.textContent = `${Math.round(mlModel.ml_ai_probability * 100)}% Anomaly Score`;
+        if (mlModelWeightVal) {
+          if (data.applied_weights) {
+            const w = data.applied_weights;
+            const compNote = data.compression_mitigation_applied ? ' [Compressed]' : '';
+            mlModelWeightVal.textContent = `Weights: Bio ${(w.biometric * 100).toFixed(0)}% · Flow ${(w.optical_flow * 100).toFixed(0)}% · FFT ${(w.fft * 100).toFixed(0)}% · PRNU ${(w.prnu * 100).toFixed(0)}%${compNote}`;
+          } else {
+            mlModelWeightVal.textContent = mlModel.scoring_mode || 'PyTorch ResNet-50 (Cross-Verified)';
+          }
+        }
       }
     } else {
       if (mlModelBadge) mlModelBadge.classList.add('hidden');

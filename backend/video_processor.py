@@ -5,14 +5,56 @@ from typing import List, Dict, Tuple, Any
 
 class VideoProcessor:
     """
-    Handles video decoding, metadata inspection, and extraction of sampled frames
-    and consecutive frame pairs for temporal analysis.
+    Handles video decoding, metadata inspection, compression bitrate detection,
+    and extraction of sampled frames and consecutive frame pairs for temporal analysis.
     """
+
+    @staticmethod
+    def calculate_bitrate_and_compression(
+        video_path: str,
+        cap: cv2.VideoCapture,
+        duration_sec: float,
+        width: int,
+        height: int
+    ) -> Tuple[float, float, bool]:
+        """
+        Reads or computes video bitrate (Mbps), effective 1080p-equivalent bitrate,
+        and determines whether heavy compression is present (< 2.0 Mbps for 1080p equivalent).
+        """
+        bitrate_bps = 0.0
+        try:
+            val = cap.get(cv2.CAP_PROP_BITRATE)
+            if val is not None and val > 0:
+                # In some ffmpeg builds, CAP_PROP_BITRATE is in kbps, in others bps
+                bitrate_bps = val * 1000.0 if val < 100_000 else val
+        except Exception:
+            bitrate_bps = 0.0
+
+        # Fallback to file size / duration
+        if bitrate_bps <= 0:
+            if os.path.exists(video_path):
+                file_size_bytes = os.path.getsize(video_path)
+                safe_duration = max(duration_sec, 0.05)
+                bitrate_bps = (file_size_bytes * 8.0) / safe_duration
+            else:
+                bitrate_bps = 2_000_000.0  # default 2 Mbps
+
+        bitrate_mbps = bitrate_bps / 1_000_000.0
+
+        # 1080p equivalent pixel density scaling (1920x1080 = 2,073,600 px)
+        ref_pixels = 1920.0 * 1080.0
+        current_pixels = float(max(width * height, 1))
+        effective_1080p_bitrate = bitrate_mbps * (ref_pixels / current_pixels)
+
+        # Flag heavy compression if under 2.0 Mbps for 1080p equivalent pixel density
+        is_heavy_compression = bool(effective_1080p_bitrate < 2.0)
+
+        return float(bitrate_mbps), float(effective_1080p_bitrate), is_heavy_compression
 
     @staticmethod
     def inspect_and_sample(video_path: str, target_samples: int = 16) -> Dict[str, Any]:
         """
-        Inspects video metadata and extracts evenly spaced frames and frame pairs.
+        Inspects video metadata, measures bitrate/compression, and extracts evenly spaced frames.
         """
         if not os.path.exists(video_path):
             raise FileNotFoundError(f"Video file not found: {video_path}")
@@ -37,9 +79,15 @@ class VideoProcessor:
                 frames_temp.append(frame)
             total_frames = len(frames_temp)
             duration_sec = total_frames / fps if fps > 0 else 0.0
+
+            if total_frames > 0 and (width <= 0 or height <= 0):
+                height, width = frames_temp[0].shape[:2]
+
+            bitrate_mbps, eff_bitrate, is_heavy = VideoProcessor.calculate_bitrate_and_compression(
+                video_path, cap, duration_sec, width, height
+            )
             cap.release()
-            
-            # Reopen or use collected frames
+
             sampled_indices = np.linspace(0, max(0, total_frames - 2), min(target_samples, total_frames)).astype(int)
             sampled_frames = []
             consecutive_pairs = []
@@ -60,13 +108,20 @@ class VideoProcessor:
                 "width": width,
                 "height": height,
                 "duration_seconds": round(duration_sec, 2),
-                "resolution": f"{width}x{height}"
+                "resolution": f"{width}x{height}",
+                "bitrate_mbps": round(bitrate_mbps, 3),
+                "effective_1080p_bitrate_mbps": round(eff_bitrate, 3),
+                "is_heavy_compression": is_heavy
             }
             return {
                 "metadata": metadata,
                 "sampled_frames": sampled_frames,
                 "consecutive_pairs": consecutive_pairs
             }
+
+        bitrate_mbps, eff_bitrate, is_heavy = VideoProcessor.calculate_bitrate_and_compression(
+            video_path, cap, duration_sec, width, height
+        )
 
         # Select evenly distributed indices (leaving room for consecutive pair idx+1)
         max_idx = max(0, total_frames - 2)
@@ -75,7 +130,7 @@ class VideoProcessor:
             sampled_indices = [0]
         else:
             sampled_indices = np.linspace(0, max_idx, count, dtype=int)
-        
+
         # Deduplicate while preserving order
         sampled_indices = sorted(list(set(sampled_indices)))
 
@@ -112,7 +167,10 @@ class VideoProcessor:
             "width": width,
             "height": height,
             "duration_seconds": round(duration_sec, 2),
-            "resolution": f"{width}x{height}"
+            "resolution": f"{width}x{height}",
+            "bitrate_mbps": round(bitrate_mbps, 3),
+            "effective_1080p_bitrate_mbps": round(eff_bitrate, 3),
+            "is_heavy_compression": is_heavy
         }
 
         return {
