@@ -1,0 +1,154 @@
+/**
+ * VeritasVideo Responsive Breakpoints & Hardening
+ * Defined Breakpoints: 1280px, 900px, 600px
+ * Tested at: 1440px, 768px, 375px
+ */
+
+/* ==========================================================================
+   1. Large Desktop & Laptop Breakpoint (<= 1280px)
+   ========================================================================== */
+@media (max-width: 1280px) {
+  .hero {
+    padding-inline: clamp(1.5rem, 5vw, 6rem);
+  }
+
+  .inspector {
+    grid-template-columns: 340px 1fr;
+    gap: var(--s8, 48px);
+  }
+
+  .signals-flow .signal {
+    gap: var(--s8, 48px);
+    padding-block: var(--s10, 80px);
+  }
+}
+
+/* ==========================================================================
+   2. Medium Tablet & Small Laptop Breakpoint (<= 900px)
+   ========================================================================== */
+@media (max-width: 900px) {
+  .hero {
+    min-height: 85vh;
+    padding-inline: var(--s4);
+    padding-block: var(--s10);
+  }
+
+  /* Inspector becomes single column, player is NOT sticky (position: static) */
+  .inspector {
+    grid-template-columns: 1fr !important;
+    gap: var(--s6) !important;
+  }
+
+  .player-sticky {
+    position: static !important;
+    top: auto !important;
+    width: 100% !important;
+  }
+
+  /* Signal sections stack, canvas first */
+  .signal,
+  .signals-flow .signal {
+    grid-template-columns: 1fr !important;
+    gap: var(--s6) !important;
+    min-height: auto !important;
+    padding-block: var(--s8) !important;
+  }
+
+  .signal-media {
+    order: -1 !important;
+  }
+
+  .verdict {
+    padding-inline: var(--s4);
+    padding-block: var(--s8);
+  }
+
+  .verdict-word {
+    font-size: clamp(3.5rem, 12vw, 8rem);
+  }
+
+  .verdict-meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--s2);
+  }
+
+  .export {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--s6);
+    padding-block: var(--s8);
+  }
+
+  .export-right {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .export-btn {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+/* ==========================================================================
+   3. Small Mobile Breakpoint (<= 600px)
+   ========================================================================== */
+@media (max-width: 600px) {
+  /* Hero H1 clamp to 3rem minimum */
+  .hero-title {
+    font-size: clamp(3rem, 12vw, 4.5rem) !important;
+    line-height: 1.02;
+    letter-spacing: -0.03em;
+  }
+
+  .hero-subline {
+    font-size: 0.75rem;
+    line-height: 1.5;
+  }
+
+  .hero-dropzone {
+    padding-block: var(--s4);
+  }
+
+  .hero-samples-editorial {
+    gap: var(--s1);
+    font-size: 0.6875rem;
+  }
+
+  /* Signal sections stack with tighter padding */
+  .signal,
+  .signals-flow .signal {
+    padding-block: var(--s6) !important;
+    gap: var(--s4) !important;
+  }
+
+  .signal-title {
+    font-size: 2rem !important;
+  }
+
+  .signal-score-num {
+    font-size: 2.25rem !important;
+  }
+
+  /* Timeline markers become 1px */
+  .timeline-bar {
+    width: 1px !important;
+  }
+
+  /* Settings trigger mobile layout */
+  .settings-trigger {
+    top: var(--s2);
+    right: var(--s2);
+    font-size: 0.6875rem;
+  }
+
+  .settings-card {
+    padding: var(--s4);
+    max-width: 100%;
+  }
+
+  .settings-title {
+    font-size: 1.5rem;
+  }
+}

@@ -1,0 +1,262 @@
+/**
+ * VeritasVideo Sticky Video Player & Anomaly Timeline
+ * Minimalist editorial portfolio layout and timeline styling
+ */
+
+/* 2-Column Inspector Layout */
+.inspector {
+  display: grid;
+  grid-template-columns: minmax(320px, 420px) 1fr;
+  gap: var(--s10);
+  align-items: start;
+  width: 100%;
+  position: relative;
+}
+
+/* Sticky Player Column */
+.player-sticky {
+  position: sticky;
+  top: var(--s6);
+  height: fit-content;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s4);
+  padding: var(--s5);
+  background: var(--ink-surface, #141414);
+  border: 1px solid var(--ink-border, rgba(244, 241, 236, 0.08));
+  border-radius: 4px;
+  box-sizing: border-box;
+  z-index: 20;
+}
+
+/* Player Header */
+.player-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(244, 241, 236, 0.08);
+  padding-bottom: var(--s2);
+}
+
+.player-label {
+  font-family: var(--font-mono, monospace);
+  font-size: var(--type-mono-xs, 0.75rem);
+  letter-spacing: var(--tracking-wide, 0.05em);
+  text-transform: uppercase;
+  color: var(--muted, #6B6660);
+}
+
+.player-time {
+  font-family: var(--font-mono, monospace);
+  font-size: var(--type-mono-xs, 0.75rem);
+  color: var(--bone, #F4F1EC);
+}
+
+/* Video Box */
+.player-video-box {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #000000;
+  border: 1px solid var(--muted, #6B6660);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.player-video,
+#mainVideoPlayer {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+/* Anomaly Timeline Section */
+.player-timeline-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+}
+
+.timeline-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--font-mono, monospace);
+  font-size: var(--type-mono-xs, 0.75rem);
+}
+
+.timeline-label {
+  letter-spacing: var(--tracking-wide, 0.05em);
+  text-transform: uppercase;
+  color: var(--muted, #6B6660);
+}
+
+.timeline-frame-time {
+  color: var(--bone, #F4F1EC);
+}
+
+/* Timeline Container & Base Line */
+.timeline-container,
+#timelineContainer {
+  position: relative;
+  width: 100%;
+  height: 48px;
+  background: rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+  display: flex;
+  align-items: flex-end;
+  box-sizing: border-box;
+  overflow: visible;
+  padding-bottom: 2px;
+  border-radius: 2px;
+}
+
+/* Height 2px base line in --muted */
+.timeline-container::after,
+#timelineContainer::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--muted, #6B6660);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Anomaly spikes: 2px vertical --anomaly ticks, heights proportional to score */
+.timeline-bar {
+  position: absolute;
+  bottom: 2px;
+  width: 2px !important;
+  background: var(--anomaly, #B33A2E) !important;
+  cursor: pointer;
+  z-index: 5;
+  transition: transform var(--dur-micro, 240ms) var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+/* Subtle hitbox padding for comfortable seeking */
+.timeline-bar::before {
+  content: '';
+  position: absolute;
+  top: -12px;
+  bottom: -6px;
+  left: -8px;
+  right: -8px;
+  cursor: pointer;
+}
+
+.timeline-bar:hover {
+  transform: scaleY(1.15);
+  background: var(--bone, #F4F1EC) !important;
+}
+
+/* Playhead: 1px --ink vertical line, full height */
+.timeline-playhead,
+#timelinePlayhead {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px !important;
+  background: var(--bone, #F4F1EC) !important;
+  background: var(--ink, #0A0A0A) !important;
+  box-shadow: 0 0 0 1px rgba(244, 241, 236, 0.45);
+  z-index: 10;
+  pointer-events: none;
+  transition: left 50ms linear;
+}
+
+.timeline-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.6875rem;
+  color: var(--muted, #6B6660);
+}
+
+.timeline-hint {
+  font-style: italic;
+}
+
+.timeline-score {
+  font-weight: 700;
+  color: var(--bone, #F4F1EC);
+}
+
+/* Stepper Controls */
+.player-stepper-box {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  border-top: 1px solid rgba(244, 241, 236, 0.08);
+  padding-top: var(--s3);
+}
+
+.player-stepper-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.stepper-btn {
+  background: transparent;
+  border: 1px solid var(--muted, #6B6660);
+  color: var(--bone, #F4F1EC);
+  font-size: 0.75rem;
+  padding: var(--s1) var(--s2);
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all var(--dur-micro, 240ms) var(--ease-out, ease-out);
+}
+
+.stepper-btn:hover {
+  background: var(--bone, #F4F1EC);
+  color: var(--ink, #0A0A0A);
+}
+
+.stepper-counter {
+  font-family: var(--font-mono, monospace);
+  font-size: var(--type-mono-xs, 0.75rem);
+  color: var(--muted, #6B6660);
+}
+
+.player-explanation {
+  font-family: var(--font-sans, sans-serif);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--muted, #6B6660);
+  margin: 0;
+}
+
+/* Right-Hand Flow Column for Signals */
+.signals-flow {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* Adapt signal layout when placed inside flow column */
+.signals-flow .signal {
+  border-bottom: 1px solid rgba(244, 241, 236, 0.08);
+}
+
+.signals-flow .signal:last-child {
+  border-bottom: none;
+}
+
+/* Mobile & Tablet Responsiveness */
+@media (max-width: 900px) {
+  .inspector {
+    grid-template-columns: 1fr;
+    gap: var(--s6);
+  }
+
+  .player-sticky {
+    position: static;
+    top: auto;
+  }
+}

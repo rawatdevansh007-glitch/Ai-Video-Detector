@@ -1,0 +1,213 @@
+/**
+ * VeritasVideo Minimalist Editorial Verdict Section
+ * Replaces dashboard verdict card with an oversized editorial typographic statement.
+ */
+
+.verdict {
+  position: relative;
+  width: 100%;
+  padding-block: clamp(3rem, 6vw, 5rem);
+  margin-block: var(--s6, 3rem);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3, 1.5rem);
+  text-align: left;
+  box-sizing: border-box;
+}
+
+/* Thin horizontal rule above and below using ::before and ::after */
+.verdict::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--muted, #6B6660);
+  opacity: 0.35;
+}
+
+.verdict::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--muted, #6B6660);
+  opacity: 0.35;
+}
+
+/* Line 1: mono-xs label "VERDICT" */
+.verdict-label {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: var(--type-mono-xs, 0.75rem);
+  letter-spacing: var(--tracking-wide, 0.08em);
+  text-transform: uppercase;
+  color: var(--muted, #6B6660);
+  display: flex;
+  align-items: center;
+  gap: var(--s2, 1rem);
+}
+
+.verdict-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.5rem;
+  border-radius: 2px;
+  font-size: 0.65rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.verdict-tag-c2pa {
+  background: rgba(37, 99, 235, 0.12);
+  color: #60A5FA;
+  border: 1px solid rgba(37, 99, 235, 0.3);
+}
+
+.verdict-tag-ml {
+  background: rgba(124, 58, 237, 0.12);
+  color: #C084FC;
+  border: 1px solid rgba(124, 58, 237, 0.3);
+}
+
+/* Line 2: display serif, clamp(5rem, 14vw, 12rem), the verdict word */
+.verdict-headline-wrap {
+  margin-block: var(--s1, 0.5rem);
+}
+
+.verdict-word {
+  font-family: var(--font-display, 'Instrument Serif', 'Fraunces', serif);
+  font-size: clamp(5rem, 14vw, 12rem);
+  line-height: var(--leading-tight, 0.94);
+  letter-spacing: var(--tracking-tight, -0.03em);
+  font-weight: 400;
+  margin: 0;
+  text-transform: capitalize;
+  transition: color var(--dur-standard, 450ms) var(--ease-out);
+}
+
+/* Color: --ink for "Real" (or --bone in dark context), --anomaly for "AI-Generated" */
+.verdict.is-ai .verdict-word,
+.verdict[data-verdict="ai"] .verdict-word {
+  color: var(--anomaly, #B33A2E);
+}
+
+.verdict.is-real .verdict-word,
+.verdict[data-verdict="real"] .verdict-word {
+  color: var(--bone, #F4F1EC);
+}
+
+.verdict.is-suspicious .verdict-word,
+.verdict[data-verdict="suspicious"] .verdict-word {
+  color: #D97706; /* Editorial amber */
+}
+
+/* Line 3: mono-sm confidence + horizontal run of mono-xs ensemble sub-scores */
+.verdict-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s3, 1.5rem);
+  padding-bottom: var(--s2, 1rem);
+}
+
+.verdict-confidence {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: var(--type-mono-sm, 0.875rem);
+  color: var(--bone, #F4F1EC);
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35rem;
+}
+
+.verdict-confidence-label {
+  color: var(--muted, #6B6660);
+}
+
+.verdict-confidence-bracket {
+  color: var(--muted, #6B6660);
+  font-size: var(--type-mono-xs, 0.75rem);
+}
+
+/* Horizontal run of mono-xs values (FFT / Flow / PRNU / Face) */
+.verdict-subscores {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: var(--type-mono-xs, 0.75rem);
+  color: var(--muted, #6B6660);
+}
+
+.subscore-item {
+  letter-spacing: 0.05em;
+}
+
+.subscore-val {
+  color: var(--bone, #F4F1EC);
+  font-weight: 500;
+  margin-left: 0.2rem;
+}
+
+.subscore-sep {
+  color: var(--muted, #6B6660);
+  opacity: 0.5;
+}
+
+/* Detailed Editorial Explanation */
+.verdict-explanation {
+  font-family: var(--font-sans, sans-serif);
+  font-size: var(--type-body, 1.05rem);
+  line-height: var(--leading-normal, 1.6);
+  color: rgba(244, 241, 236, 0.82);
+  max-width: 72ch;
+  margin-top: var(--s1, 0.5rem);
+}
+
+/* Provenance & ML Diagnostic Callouts */
+.verdict-box {
+  margin-top: var(--s3, 1.5rem);
+  padding: 1rem 1.25rem;
+  border-left: 2px solid;
+  background: rgba(10, 10, 10, 0.4);
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.verdict-box-title {
+  font-family: var(--font-mono, monospace);
+  font-size: var(--type-mono-xs, 0.75rem);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.verdict-box-content {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.25rem;
+  font-family: var(--font-mono, monospace);
+  color: rgba(244, 241, 236, 0.75);
+}
+
+.verdict-box-c2pa {
+  border-color: #3B82F6;
+}
+
+.verdict-box-c2pa .verdict-box-title {
+  color: #60A5FA;
+}
+
+.verdict-box-ml {
+  border-color: #8B5CF6;
+}
+
+.verdict-box-ml .verdict-box-title {
+  color: #C084FC;
+}

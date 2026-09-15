@@ -1,0 +1,244 @@
+/**
+ * VeritasVideo Minimalist Editorial Hero Styles
+ * Reference: Atmospheric, typography-first, bone/ink aesthetic
+ */
+
+/* Minimalist Editorial Top Bar */
+.editorial-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-inline: clamp(1.5rem, 8vw, 10rem);
+  padding-block: 2.25rem;
+  z-index: 40;
+  background: transparent;
+}
+
+.editorial-brand {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s2);
+}
+
+.editorial-mark {
+  font-family: var(--font-display, 'Instrument Serif', serif);
+  font-size: 1.5rem;
+  color: var(--bone, #F4F1EC);
+  letter-spacing: -0.02em;
+}
+
+.editorial-tag {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: var(--type-mono-xs, 0.75rem);
+  color: var(--muted, #6B6660);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.editorial-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s4);
+}
+
+.editorial-nav-btn {
+  background: transparent;
+  border: none;
+  color: var(--muted, #6B6660);
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: var(--type-mono-xs, 0.75rem);
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  padding: 0;
+  transition: color var(--dur-micro, 240ms) var(--ease-out);
+}
+
+.editorial-nav-btn:hover {
+  color: var(--bone, #F4F1EC);
+}
+
+/* Full-Viewport Editorial Hero */
+.hero {
+  min-height: 100vh;
+  display: grid;
+  place-content: center;
+  text-align: left;
+  padding-inline: clamp(1.5rem, 8vw, 10rem);
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.hero-content {
+  width: 100%;
+  max-width: 960px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+}
+
+/* H1 in display serif, max 2 lines */
+.hero-title {
+  font-family: var(--font-display, 'Instrument Serif', serif);
+  font-size: var(--type-display, clamp(4rem, 8.5vw, 9rem));
+  line-height: var(--leading-tight, 0.96);
+  letter-spacing: var(--tracking-tight, -0.03em);
+  color: var(--bone, #F4F1EC);
+  font-weight: 400;
+  margin: 0;
+  max-width: 16ch;
+}
+
+/* Subline in mono-xs, muted */
+.hero-subline {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: var(--type-mono-xs, 0.75rem);
+  color: var(--muted, #6B6660);
+  letter-spacing: var(--tracking-wide, 0.05em);
+  text-transform: uppercase;
+  margin-top: var(--s2);
+  margin-bottom: var(--s3);
+  line-height: 1.6;
+}
+
+/* Quiet Drag-Drop Zone: Thin dashed bottom rule */
+.hero-dropzone {
+  border-bottom: 1px dashed var(--muted, #6B6660);
+  padding-block: 2rem;
+  cursor: pointer;
+  transition: border-color var(--dur-micro, 240ms) var(--ease-out),
+              border-bottom-width var(--dur-micro, 240ms) var(--ease-out),
+              background var(--dur-micro, 240ms) var(--ease-out);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.hero-dropzone:hover {
+  border-bottom: 2px dashed var(--anomaly, #B33A2E);
+}
+
+.hero-dropzone.is-dragover {
+  border-color: var(--anomaly, #B33A2E) !important;
+  border-bottom-width: 2px !important;
+  background: rgba(179, 58, 46, 0.04);
+}
+
+.dropzone-label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+}
+
+.dropzone-prompt {
+  font-family: var(--font-sans, -apple-system, BlinkMacSystemFont, sans-serif);
+  font-size: var(--type-body, 1.05rem);
+  color: var(--bone, #F4F1EC);
+}
+
+.dropzone-action {
+  color: var(--bone, #F4F1EC);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-color: var(--muted, #6B6660);
+  transition: text-decoration-color var(--dur-micro, 240ms);
+}
+
+.hero-dropzone:hover .dropzone-action {
+  text-decoration-color: var(--anomaly, #B33A2E);
+}
+
+.dropzone-formats {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: var(--type-mono-xs, 0.75rem);
+  color: var(--muted, #6B6660);
+}
+
+/* Selected File Preview Card (quiet editorial styling) */
+.hero-file-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s3);
+  padding-block: var(--s3);
+  border-bottom: 1px solid rgba(244, 241, 236, 0.15);
+  margin-top: var(--s3);
+}
+
+.hero-file-card.hidden {
+  display: none !important;
+}
+
+.hero-file-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+}
+
+.hero-file-dot {
+  color: var(--anomaly, #B33A2E);
+  font-size: 0.65rem;
+}
+
+.hero-file-name {
+  color: var(--bone, #F4F1EC);
+  font-size: var(--type-mono-sm, 0.875rem);
+  font-weight: 500;
+}
+
+.hero-file-details {
+  color: var(--muted, #6B6660);
+  font-size: var(--type-mono-xs, 0.75rem);
+}
+
+.hero-file-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+}
+
+.hero-btn-remove {
+  background: transparent;
+  border: none;
+  color: var(--muted, #6B6660);
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: var(--type-mono-xs, 0.75rem);
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0;
+  transition: color var(--dur-micro, 240ms);
+}
+
+.hero-btn-remove:hover {
+  color: var(--anomaly, #B33A2E);
+}
+
+.hero-btn-analyze {
+  background: var(--bone, #F4F1EC);
+  color: var(--ink, #0A0A0A);
+  border: 1px solid var(--bone, #F4F1EC);
+  padding: 0.6rem 1.25rem;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: var(--type-mono-xs, 0.75rem);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all var(--dur-micro, 240ms) var(--ease-out);
+}
+
+.hero-btn-analyze:hover {
+  background: transparent;
+  color: var(--bone, #F4F1EC);
+  border-color: var(--bone, #F4F1EC);
+}
+

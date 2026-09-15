@@ -1,0 +1,414 @@
+/**
+ * VeritasVideo Peripheral Elements
+ * Minimalist editorial portfolio styling for:
+ * 1. Sample buttons under hero drag zone (mono-xs text links separated by ·)
+ * 2. Settings modal trigger (top-right fixed) & modal overlay (--bone at 98% opacity)
+ * 3. Export footer (display serif h2 + mono-sm action buttons)
+ */
+
+/* 1. Hero Sample Buttons (Directly under hero drag zone) */
+.hero-samples-editorial {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--s2);
+  margin-top: var(--s3);
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: var(--type-mono-xs, 0.75rem);
+  color: var(--muted, #6B6660);
+  line-height: var(--leading-normal, 1.6);
+}
+
+.sample-link {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font-family: inherit;
+  font-size: inherit;
+  color: var(--muted, #6B6660);
+  cursor: pointer;
+  text-decoration: none;
+  transition: color var(--dur-micro, 240ms) var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+.sample-link:hover {
+  color: var(--bone, #F4F1EC);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.sample-sep {
+  color: var(--muted, #6B6660);
+  user-select: none;
+  opacity: 0.5;
+}
+
+/* 2. Settings Trigger (Top-right fixed mono-xs link) */
+.settings-trigger {
+  position: fixed;
+  top: var(--s4);
+  right: var(--s4);
+  z-index: 90;
+  background: transparent;
+  border: none;
+  padding: var(--s1) var(--s2);
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: var(--type-mono-xs, 0.75rem);
+  letter-spacing: var(--tracking-wide, 0.05em);
+  text-transform: uppercase;
+  color: var(--muted, #6B6660);
+  cursor: pointer;
+  transition: color var(--dur-micro, 240ms) var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+.settings-trigger:hover {
+  color: var(--bone, #F4F1EC);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Settings Modal: Full-screen overlay with --bone background at 98% opacity */
+.settings-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(244, 241, 236, 0.98);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--s4);
+  box-sizing: border-box;
+}
+
+.settings-overlay.hidden {
+  display: none !important;
+}
+
+.settings-card {
+  width: 100%;
+  max-width: 480px;
+  background: #FFFFFF;
+  border: 1px solid rgba(10, 10, 10, 0.1);
+  border-radius: 4px;
+  box-shadow: 0 24px 60px -12px rgba(10, 10, 10, 0.18);
+  padding: var(--s6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s5);
+  color: var(--ink, #0A0A0A);
+  box-sizing: border-box;
+}
+
+.settings-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(10, 10, 10, 0.08);
+  padding-bottom: var(--s3);
+}
+
+.settings-eyebrow {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: var(--type-mono-xs, 0.75rem);
+  letter-spacing: var(--tracking-wide, 0.05em);
+  text-transform: uppercase;
+  color: var(--muted, #6B6660);
+  display: block;
+}
+
+.settings-title {
+  font-family: var(--font-display, 'Instrument Serif', Georgia, serif);
+  font-size: 1.85rem;
+  font-weight: 400;
+  line-height: 1.1;
+  color: var(--ink, #0A0A0A);
+  margin: var(--s1) 0 0 0;
+}
+
+.settings-close-btn {
+  background: transparent;
+  border: none;
+  color: var(--muted, #6B6660);
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: var(--s1);
+  line-height: 1;
+  transition: color var(--dur-micro, 240ms) var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+.settings-close-btn:hover {
+  color: var(--ink, #0A0A0A);
+}
+
+.settings-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s4);
+}
+
+.settings-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+}
+
+.settings-label {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: var(--type-mono-xs, 0.75rem);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink, #0A0A0A);
+}
+
+.settings-input,
+.settings-select {
+  width: 100%;
+  padding: var(--s2) var(--s3);
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: var(--type-mono-sm, 0.875rem);
+  color: var(--ink, #0A0A0A);
+  background: #F8F7F4;
+  border: 1px solid rgba(10, 10, 10, 0.18);
+  border-radius: 2px;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color var(--dur-micro, 240ms) var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+.settings-input:focus,
+.settings-select:focus {
+  border-color: var(--ink, #0A0A0A);
+  background: #FFFFFF;
+}
+
+.settings-help {
+  font-family: var(--font-sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--muted, #6B6660);
+  margin: 0;
+}
+
+.settings-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--s3);
+  border-top: 1px solid rgba(10, 10, 10, 0.08);
+  padding-top: var(--s4);
+}
+
+.settings-btn-cancel {
+  background: transparent;
+  border: 1px solid transparent;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: var(--type-mono-xs, 0.75rem);
+  color: var(--muted, #6B6660);
+  padding: var(--s2) var(--s3);
+  border-radius: 2px;
+  cursor: pointer;
+  transition: color var(--dur-micro, 240ms) var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+.settings-btn-cancel:hover {
+  color: var(--ink, #0A0A0A);
+}
+
+.settings-btn-save {
+  background: var(--ink, #0A0A0A);
+  color: var(--bone, #F4F1EC);
+  border: 1px solid var(--ink, #0A0A0A);
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: var(--type-mono-xs, 0.75rem);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: var(--s2) var(--s4);
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all var(--dur-micro, 240ms) var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+.settings-btn-save:hover {
+  background: transparent;
+  color: var(--ink, #0A0A0A);
+}
+
+/* 3. Export Footer Section */
+.export {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-block: var(--s10);
+  border-top: 1px solid rgba(244, 241, 236, 0.08);
+  margin-top: var(--s12);
+  gap: var(--s6);
+  box-sizing: border-box;
+}
+
+.export-left {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+}
+
+.export-heading {
+  font-family: var(--font-display, 'Instrument Serif', Georgia, serif);
+  font-size: var(--type-h2, clamp(1.75rem, 3.2vw, 2.75rem));
+  font-weight: 400;
+  line-height: var(--leading-snug, 1.15);
+  letter-spacing: var(--tracking-tight, -0.03em);
+  color: var(--bone, #F4F1EC);
+  margin: 0;
+}
+
+.export-reset-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: var(--type-mono-xs, 0.75rem);
+  color: var(--muted, #6B6660);
+  cursor: pointer;
+  text-align: left;
+  transition: color var(--dur-micro, 240ms) var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+.export-reset-link:hover {
+  color: var(--bone, #F4F1EC);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.export-right {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+}
+
+.export-btn {
+  background: transparent;
+  border: 1px solid var(--muted, #6B6660);
+  color: var(--bone, #F4F1EC);
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: var(--type-mono-sm, 0.875rem);
+  padding: var(--s2) var(--s4);
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all var(--dur-micro, 240ms) var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+  white-space: nowrap;
+}
+
+.export-btn:hover {
+  background: var(--bone, #F4F1EC);
+  color: var(--ink, #0A0A0A);
+  border-color: var(--bone, #F4F1EC);
+}
+
+@media (max-width: 768px) {
+  .export {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--s6);
+    padding-block: var(--s8);
+  }
+
+  .export-right {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .export-btn {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+/* ==========================================================================
+   4. Print Stylesheet (Hides Chrome, Shows Verdict & Signals)
+   ========================================================================== */
+@media print {
+  body {
+    background: #FFFFFF !important;
+    color: #0A0A0A !important;
+  }
+
+  /* Hide navigation, chrome, modal, and interactive triggers */
+  header,
+  .editorial-header,
+  .settings-trigger,
+  #uploadSection,
+  #progressSection,
+  #settingsModal,
+  #modelModal,
+  footer,
+  .export,
+  button,
+  .player-stepper-box,
+  .timeline-container,
+  .timeline-footer,
+  .player-header {
+    display: none !important;
+  }
+
+  /* Reveal results, verdict, video frame, and all 4 forensic signals */
+  #resultsDashboard {
+    display: block !important;
+  }
+
+  .verdict {
+    padding-block: var(--s4) !important;
+    margin-block: var(--s2) !important;
+    border-bottom: 1px solid #0A0A0A !important;
+  }
+
+  .verdict-word {
+    color: #0A0A0A !important;
+  }
+
+  .verdict.is-ai .verdict-word {
+    color: #B33A2E !important;
+  }
+
+  .inspector {
+    display: block !important;
+  }
+
+  .player-sticky {
+    position: static !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    margin-bottom: var(--s6) !important;
+  }
+
+  .signal {
+    min-height: auto !important;
+    padding-block: var(--s4) !important;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .signal-title {
+    color: #0A0A0A !important;
+  }
+
+  .signal-desc,
+  .signal-eyebrow,
+  .signal-score-label {
+    color: #524F4A !important;
+  }
+
+  .signal-score-num {
+    color: #0A0A0A !important;
+  }
+
+  .signal-canvas {
+    border: 1px solid #0A0A0A !important;
+  }
+}
+

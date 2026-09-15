@@ -1,0 +1,56 @@
+/**
+ * VeritasVideo Editorial Motion Styles
+ * Slow atmospheric reveals, cubic-bezier ease-out, 80ms stagger, and accessibility overrides.
+ */
+
+/* 1. Base Reveal State */
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity var(--dur-reveal, 1100ms) var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)),
+              transform var(--dur-reveal, 1100ms) var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+  will-change: opacity, transform;
+}
+
+/* 2. Active Revealed State */
+[data-reveal].is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* 3. Staggered Delays for Children (80ms multiplier via CSS var --i or nth-child) */
+[data-reveal-stagger] > * {
+  transition-delay: calc(var(--i, 0) * 80ms);
+}
+
+[data-reveal-stagger] > *:nth-child(1)  { --i: 0; }
+[data-reveal-stagger] > *:nth-child(2)  { --i: 1; }
+[data-reveal-stagger] > *:nth-child(3)  { --i: 2; }
+[data-reveal-stagger] > *:nth-child(4)  { --i: 3; }
+[data-reveal-stagger] > *:nth-child(5)  { --i: 4; }
+[data-reveal-stagger] > *:nth-child(6)  { --i: 5; }
+[data-reveal-stagger] > *:nth-child(7)  { --i: 6; }
+[data-reveal-stagger] > *:nth-child(8)  { --i: 7; }
+[data-reveal-stagger] > *:nth-child(9)  { --i: 8; }
+[data-reveal-stagger] > *:nth-child(10) { --i: 9; }
+[data-reveal-stagger] > *:nth-child(11) { --i: 10; }
+[data-reveal-stagger] > *:nth-child(12) { --i: 11; }
+
+/* 4. Subtle Parallax Transition Helper */
+[data-parallax] {
+  will-change: transform;
+  transition: transform var(--dur-micro, 240ms) linear;
+}
+
+/* 5. Reduced Motion Override: Instant opacity, no transforms */
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal],
+  [data-reveal].is-visible,
+  [data-reveal-stagger] > *,
+  [data-parallax] {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+    animation: none !important;
+  }
+}

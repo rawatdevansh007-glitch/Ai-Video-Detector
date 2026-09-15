@@ -1,0 +1,141 @@
+/**
+ * VeritasVideo Editorial Signal Sections
+ * Full-width atmospheric scroll sections for each forensic signal:
+ * 01 - Spectral (FFT)
+ * 02 - Optical Flow
+ * 03 - Sensor Noise Residual (PRNU)
+ * 04 - Biometric & Facial Seams
+ */
+
+.signal {
+  min-height: 90vh;
+  display: grid;
+  grid-template-columns: 5fr 7fr;
+  gap: var(--s10);
+  align-items: center;
+  padding-block: var(--s12);
+  border-bottom: 1px solid rgba(244, 241, 236, 0.08);
+  position: relative;
+  box-sizing: border-box;
+}
+
+.signal:last-child {
+  border-bottom: none;
+}
+
+/* Left Column (5/12) */
+.signal-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--s4);
+  padding-right: var(--s2);
+}
+
+.signal-eyebrow {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: var(--type-mono-xs, 0.75rem);
+  letter-spacing: var(--tracking-wide, 0.05em);
+  text-transform: uppercase;
+  color: var(--muted, #6B6660);
+  margin: 0;
+}
+
+.signal-title {
+  font-family: var(--font-display, 'Instrument Serif', Georgia, serif);
+  font-size: var(--type-h2, clamp(1.75rem, 3.2vw, 2.75rem));
+  font-weight: 400;
+  line-height: var(--leading-snug, 1.15);
+  letter-spacing: var(--tracking-tight, -0.03em);
+  color: var(--bone, #F4F1EC);
+  margin: 0;
+}
+
+.signal-desc {
+  font-family: var(--font-sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
+  font-size: var(--type-body, 1rem);
+  line-height: var(--leading-normal, 1.6);
+  color: var(--muted, #6B6660);
+  margin: 0;
+  max-width: 52ch;
+}
+
+.signal-metric {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s3, 1.5rem);
+  margin-top: var(--s2, 1.0rem);
+}
+
+.signal-score-num {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: clamp(2.5rem, 4vw, 3.5rem);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--bone, #F4F1EC);
+}
+
+.signal-score-label {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: var(--type-mono-xs, 0.75rem);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide, 0.05em);
+  color: var(--muted, #6B6660);
+}
+
+/* Right Column (7/12) */
+.signal-media {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.signal-canvas,
+.signal canvas {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 1px solid var(--muted, #6B6660);
+  background: #000000;
+  display: block;
+  object-fit: contain;
+  box-sizing: border-box;
+  border-radius: 2px;
+  transition: border-color var(--dur-micro, 240ms) var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)),
+              box-shadow var(--dur-micro, 240ms) var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+/* Signal Specific Accent Hover / Active States */
+.signal[data-signal="fft"]:hover canvas {
+  border-color: var(--heatmap-fft, #7C3AED);
+  box-shadow: 0 0 24px -6px rgba(124, 58, 237, 0.25);
+}
+
+.signal[data-signal="flow"]:hover canvas {
+  border-color: var(--heatmap-flow, #2563EB);
+  box-shadow: 0 0 24px -6px rgba(37, 99, 235, 0.25);
+}
+
+.signal[data-signal="prnu"]:hover canvas {
+  border-color: var(--heatmap-noise, #0D9488);
+  box-shadow: 0 0 24px -6px rgba(13, 148, 136, 0.25);
+}
+
+.signal[data-signal="face"]:hover canvas {
+  border-color: var(--anomaly, #B33A2E);
+  box-shadow: 0 0 24px -6px rgba(179, 58, 46, 0.25);
+}
+
+/* Single Column & Canvas First on Mobile (<= 900px) */
+@media (max-width: 900px) {
+  .signal {
+    grid-template-columns: 1fr;
+    gap: var(--s6);
+    min-height: auto;
+    padding-block: var(--s8);
+  }
+
+  .signal-media {
+    order: -1;
+  }
+}

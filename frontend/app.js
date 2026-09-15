@@ -1,6 +1,13 @@
 // VeritasVideo Forensic Dashboard Application Logic
 
 document.addEventListener('DOMContentLoaded', () => {
+  // Support legacy or generic canvas element IDs if queried
+  const canvasLegacyMap = { 'canvas1': 'fftCanvas', 'canvas2': 'flowCanvas', 'canvas3': 'prnuCanvas', 'canvas4': 'faceCanvas' };
+  const origGetById = document.getElementById.bind(document);
+  document.getElementById = function(id) {
+    return origGetById(id) || (canvasLegacyMap[id] ? origGetById(canvasLegacyMap[id]) : null);
+  };
+
   // DOM Elements
   const dropZone = document.getElementById('dropZone');
   const videoInput = document.getElementById('videoInput');
@@ -69,6 +76,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const facialScoreBar = document.getElementById('facialScoreBar');
   const facialStatusBadge = document.getElementById('facialStatusBadge');
 
+  // Signal Heatmap Canvases (Editorial Scroll Sections)
+  const fftCanvas = document.getElementById('fftCanvas') || document.getElementById('canvas1');
+  const flowCanvas = document.getElementById('flowCanvas') || document.getElementById('canvas2');
+  const prnuCanvas = document.getElementById('prnuCanvas') || document.getElementById('canvas3');
+  const faceCanvas = document.getElementById('faceCanvas') || document.getElementById('canvas4');
+
   const semanticSection = document.getElementById('semanticSection');
   const semanticAnalysisText = document.getElementById('semanticAnalysisText');
 
@@ -98,18 +111,28 @@ document.addEventListener('DOMContentLoaded', () => {
   if (geminiApiKeyInput) geminiApiKeyInput.value = geminiApiKey;
   if (samplingDensitySelect) samplingDensitySelect.value = samplingDensity;
 
-  // Drag and Drop Events
+  // Drag and Drop Events & Keyboard Access
   dropZone.addEventListener('click', () => videoInput.click());
+  dropZone.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      videoInput.click();
+    }
+  });
+  dropZone.addEventListener('dragenter', (e) => {
+    e.preventDefault();
+    dropZone.classList.add('is-dragover');
+  });
   dropZone.addEventListener('dragover', (e) => {
     e.preventDefault();
-    dropZone.classList.add('border-cyan-400', 'bg-cyan-950/20');
+    dropZone.classList.add('is-dragover');
   });
-  dropZone.addEventListener('dragleave', () => {
-    dropZone.classList.remove('border-cyan-400', 'bg-cyan-950/20');
+  dropZone.addEventListener('dragleave', (e) => {
+    dropZone.classList.remove('is-dragover');
   });
   dropZone.addEventListener('drop', (e) => {
     e.preventDefault();
-    dropZone.classList.remove('border-cyan-400', 'bg-cyan-950/20');
+    dropZone.classList.remove('is-dragover');
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       handleFileSelected(e.dataTransfer.files[0]);
     }
@@ -155,9 +178,8 @@ document.addEventListener('DOMContentLoaded', () => {
   async function loadSampleVideo(type) {
     try {
       dropZone.innerHTML = `
-        <div class="py-4 text-center">
-          <i class="fa-solid fa-circle-notch animate-spin text-cyan-400 text-2xl mb-2"></i>
-          <p class="text-xs text-slate-300 font-mono">Loading sample ${type.toUpperCase()} video...</p>
+        <div class="py-2 text-left">
+          <p class="text-xs text-muted font-mono"><i class="fa-solid fa-circle-notch animate-spin mr-2"></i>Loading sample ${type.toUpperCase()} video...</p>
         </div>
       `;
       const res = await fetch(`/api/sample-video/${type}`);
@@ -170,14 +192,19 @@ document.addEventListener('DOMContentLoaded', () => {
       if (type === 'c2pa') filename = 'c2pa_ai_sample.mp4';
       const file = new File([blob], filename, { type: 'video/mp4' });
       dropZone.innerHTML = `
-        <div class="w-16 h-16 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 group-hover:scale-110 transition duration-300 shadow-lg shadow-cyan-500/10">
-          <i class="fa-solid fa-cloud-arrow-up text-2xl"></i>
-        </div>
-        <div class="space-y-1">
-          <p class="text-base font-medium text-slate-200"><span class="text-cyan-400 underline decoration-cyan-400/50 underline-offset-2">Click to browse</span> or drag and drop video</p>
-          <p class="text-xs text-slate-500 font-mono">Supported formats: MP4, WebM, MOV, AVI (Max recommended: 100MB)</p>
+        <input type="file" id="videoInput" accept="video/mp4,video/webm,video/quicktime,video/x-msvideo" class="hidden">
+        <div class="dropzone-label">
+          <span class="dropzone-prompt">Drop video file here, or <span class="dropzone-action">browse</span></span>
+          <span class="dropzone-formats">MP4, WebM, MOV, AVI — max 100MB</span>
         </div>
       `;
+      // Rebind videoInput if replaced
+      const newVideoInput = document.getElementById('videoInput');
+      if (newVideoInput) {
+        newVideoInput.addEventListener('change', (e) => {
+          if (e.target.files && e.target.files.length > 0) handleFileSelected(e.target.files[0]);
+        });
+      }
       handleFileSelected(file);
     } catch (err) {
       alert(`Could not load sample: ${err.message}`);
@@ -272,38 +299,51 @@ document.addEventListener('DOMContentLoaded', () => {
     const isAI = data.verdict === 'AI_GENERATED';
     const isSuspicious = data.verdict === 'SUSPICIOUS';
 
-    // 1. Verdict Banner Styling
+    // 1. Verdict Styling & Editorial Statement
+    const verdictWord = isAI ? 'AI-Generated' : (isSuspicious ? 'Suspicious' : 'Real');
     if (isAI) {
-      verdictBanner.className = 'rounded-2xl p-6 sm:p-8 border shadow-2xl relative overflow-hidden transition-all duration-500 bg-red-950/20 border-red-500/40';
-      verdictIconContainer.className = 'w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center shrink-0 text-3xl sm:text-4xl shadow-xl bg-red-500/10 border border-red-500/30 text-red-400';
-      verdictIconContainer.innerHTML = '<i class="fa-solid fa-robot"></i>';
-      verdictBadge.className = 'px-3 py-1 rounded-full text-xs font-mono font-bold uppercase tracking-wider bg-red-500/20 text-red-400 border border-red-500/40';
-      verdictBadge.textContent = 'LIKELY AI-GENERATED / SYNTHETIC';
-      verdictHeadline.textContent = 'Synthetic Generative Video Artifacts Detected';
-      scoreDialCircle.setAttribute('class', 'text-red-500 transition-all duration-1000');
-      scoreLabelText.textContent = 'AI Probability';
+      verdictBanner.className = 'verdict is-ai';
+      verdictBanner.setAttribute('data-verdict', 'ai');
     } else if (isSuspicious) {
-      verdictBanner.className = 'rounded-2xl p-6 sm:p-8 border shadow-2xl relative overflow-hidden transition-all duration-500 bg-amber-950/20 border-amber-500/40';
-      verdictIconContainer.className = 'w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center shrink-0 text-3xl sm:text-4xl shadow-xl bg-amber-500/10 border border-amber-500/30 text-amber-400';
-      verdictIconContainer.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
-      verdictBadge.className = 'px-3 py-1 rounded-full text-xs font-mono font-bold uppercase tracking-wider bg-amber-500/20 text-amber-400 border border-amber-500/40';
-      verdictBadge.textContent = 'SUSPICIOUS / INCONCLUSIVE';
-      verdictHeadline.textContent = 'Anomalous Signals Detected in Some Segments';
-      scoreDialCircle.setAttribute('class', 'text-amber-500 transition-all duration-1000');
-      scoreLabelText.textContent = 'Anomaly Index';
+      verdictBanner.className = 'verdict is-suspicious';
+      verdictBanner.setAttribute('data-verdict', 'suspicious');
     } else {
-      verdictBanner.className = 'rounded-2xl p-6 sm:p-8 border shadow-2xl relative overflow-hidden transition-all duration-500 bg-emerald-950/20 border-emerald-500/40';
-      verdictIconContainer.className = 'w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center shrink-0 text-3xl sm:text-4xl shadow-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400';
-      verdictIconContainer.innerHTML = '<i class="fa-solid fa-shield-check"></i>';
-      verdictBadge.className = 'px-3 py-1 rounded-full text-xs font-mono font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/40';
-      verdictBadge.textContent = 'LIKELY AUTHENTIC CAMERA FOOTAGE';
-      verdictHeadline.textContent = 'Consistent Camera Sensor Noise & Natural Physics';
-      scoreDialCircle.setAttribute('class', 'text-emerald-500 transition-all duration-1000');
-      scoreLabelText.textContent = 'Authenticity';
+      verdictBanner.className = 'verdict is-real';
+      verdictBanner.setAttribute('data-verdict', 'real');
     }
+
+    if (verdictBadge) verdictBadge.textContent = verdictWord;
+    if (verdictHeadline) verdictHeadline.textContent = verdictWord;
+    if (scoreDialCircle) scoreDialCircle.setAttribute('class', isAI ? 'text-red-500' : (isSuspicious ? 'text-amber-500' : 'text-emerald-500'));
+    if (scoreLabelText) scoreLabelText.textContent = 'confidence';
 
     verdictRiskPill.textContent = `${data.confidence_level} Confidence`;
     verdictExplanation.textContent = data.summary_explanation;
+
+    // Line 3 Confidence formatting (e.g., "84.2% confidence")
+    const rawConf = isAI ? (data.composite_ai_score * 100) : ((1.0 - data.composite_ai_score) * 100);
+    const formattedConf = rawConf.toFixed(1);
+    if (scorePercentValue) scorePercentValue.textContent = `${formattedConf}%`;
+    const confValEl = document.getElementById('confidenceValue');
+    if (confValEl) confValEl.textContent = `${formattedConf}%`;
+
+    // Horizontal run of mono-xs values (FFT / Flow / PRNU / Face)
+    const vFFT = document.getElementById('verdictSubFFT');
+    const vFlow = document.getElementById('verdictSubFlow');
+    const vPRNU = document.getElementById('verdictSubPRNU');
+    const vFace = document.getElementById('verdictSubFace');
+    if (vFFT && data.metrics && data.metrics.spectral) {
+      vFFT.textContent = `${Math.round(data.metrics.spectral.score * 100)}%`;
+    }
+    if (vFlow && data.metrics && data.metrics.temporal) {
+      vFlow.textContent = `${Math.round(data.metrics.temporal.score * 100)}%`;
+    }
+    if (vPRNU && data.metrics && data.metrics.noise_residual) {
+      vPRNU.textContent = `${Math.round(data.metrics.noise_residual.score * 100)}%`;
+    }
+    if (vFace && data.metrics && data.metrics.facial) {
+      vFace.textContent = data.metrics.facial.faces_detected > 0 ? `${Math.round(data.metrics.facial.score * 100)}%` : 'N/A';
+    }
 
     // C2PA Provenance Handling
     const c2pa = data.c2pa_provenance;
@@ -322,9 +362,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
       if (data.visual_scan_bypassed) {
-        verdictHeadline.textContent = 'Cryptographic C2PA AI Provenance Verified';
-        verdictIconContainer.innerHTML = '<i class="fa-solid fa-certificate"></i>';
-        verdictBadge.textContent = 'C2PA VERIFIED AI-GENERATED';
+        verdictHeadline.textContent = 'C2PA Verified AI';
+        if (verdictBadge) verdictBadge.textContent = 'C2PA Verified AI';
       }
     } else {
       if (c2paBadge) c2paBadge.classList.add('hidden');
@@ -479,11 +518,46 @@ document.addEventListener('DOMContentLoaded', () => {
       const durSec = Math.floor(dur % 60).toString().padStart(2, '0');
       currentTimeDisplay.textContent = `${curMin}:${curSec} / ${durMin}:${durSec}`;
     });
+
+    updateTimelineA11y();
+  }
+
+  // Timeline Scrubber Keyboard Seek (ArrowLeft / ArrowRight)
+  if (timelineContainer) {
+    timelineContainer.addEventListener('keydown', (e) => {
+      if (!currentAnalysis || !currentAnalysis.frames || currentAnalysis.frames.length === 0) return;
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        if (currentFrameIndex > 0) {
+          currentFrameIndex--;
+          const f = currentAnalysis.frames[currentFrameIndex];
+          if (mainVideoPlayer.duration) mainVideoPlayer.currentTime = f.timestamp_sec;
+          updateFrameInspector();
+        }
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        if (currentFrameIndex < currentAnalysis.frames.length - 1) {
+          currentFrameIndex++;
+          const f = currentAnalysis.frames[currentFrameIndex];
+          if (mainVideoPlayer.duration) mainVideoPlayer.currentTime = f.timestamp_sec;
+          updateFrameInspector();
+        }
+      }
+    });
+  }
+
+  function updateTimelineA11y() {
+    if (!timelineContainer || !currentAnalysis || !currentAnalysis.frames || currentAnalysis.frames.length === 0) return;
+    const total = currentAnalysis.frames.length;
+    const pct = Math.round(((currentFrameIndex + 1) / total) * 100);
+    timelineContainer.setAttribute('aria-valuenow', pct);
+    timelineContainer.setAttribute('aria-valuetext', `Frame ${currentFrameIndex + 1} of ${total}`);
   }
 
   // Update Frame Inspector View
   function updateFrameInspector() {
     if (!currentAnalysis || !currentAnalysis.frames || currentAnalysis.frames.length === 0) return;
+    updateTimelineA11y();
 
     const frame = currentAnalysis.frames[currentFrameIndex];
     inspectedFrameTime.textContent = `Frame #${currentFrameIndex + 1} (${frame.timestamp_sec.toFixed(1)}s)`;
@@ -507,6 +581,51 @@ document.addEventListener('DOMContentLoaded', () => {
       inspectorImage.src = visualUrl; // attempt display
     };
     img.src = visualUrl;
+
+    // Synchronize all 4 full-width forensic signal canvases
+    renderAllSignalHeatmaps(currentFrameIndex);
+  }
+
+  // Draw Heatmap to Canvas helper
+  function drawHeatmapToCanvas(canvas, imageUrl) {
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      canvas.width = img.naturalWidth || 1280;
+      canvas.height = img.naturalHeight || 720;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    };
+    img.onerror = () => {
+      ctx.fillStyle = '#0a0d14';
+      ctx.fillRect(0, 0, canvas.width || 640, canvas.height || 360);
+      ctx.fillStyle = '#6B6660';
+      ctx.font = '12px "JetBrains Mono", monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('FORENSIC HEATMAP UNAVAILABLE', (canvas.width || 640) / 2, (canvas.height || 360) / 2);
+    };
+    img.src = imageUrl;
+  }
+
+  // Render all 4 sequential signal heatmaps
+  function renderAllSignalHeatmaps(frameIdx = currentFrameIndex) {
+    if (!currentAnalysis || !currentAnalysis.analysis_id) return;
+    const id = currentAnalysis.analysis_id;
+
+    const targetFFT = document.getElementById('fftCanvas') || document.getElementById('canvas1') || document.querySelector('[data-signal="fft"] canvas');
+    const targetFlow = document.getElementById('flowCanvas') || document.getElementById('canvas2') || document.querySelector('[data-signal="flow"] canvas');
+    const targetPRNU = document.getElementById('prnuCanvas') || document.getElementById('canvas3') || document.querySelector('[data-signal="prnu"] canvas');
+    const targetFace = document.getElementById('faceCanvas') || document.getElementById('canvas4') || document.querySelector('[data-signal="face"] canvas');
+
+    if (targetFFT) drawHeatmapToCanvas(targetFFT, `/api/frame-visual/${id}/${frameIdx}/fft`);
+    if (targetFlow) drawHeatmapToCanvas(targetFlow, `/api/frame-visual/${id}/${frameIdx}/flow`);
+    if (targetPRNU) drawHeatmapToCanvas(targetPRNU, `/api/frame-visual/${id}/${frameIdx}/noise`);
+    if (targetFace) drawHeatmapToCanvas(targetFace, `/api/frame-visual/${id}/${frameIdx}/facial`);
   }
 
   // Filter Buttons
@@ -558,15 +677,77 @@ document.addEventListener('DOMContentLoaded', () => {
     removeFileBtn.click();
   });
 
-  // Settings Modal Handlers
-  settingsBtn.addEventListener('click', () => settingsModal.classList.remove('hidden'));
-  closeSettingsBtn.addEventListener('click', () => settingsModal.classList.add('hidden'));
+  // Settings Modal Handlers & A11y Focus Trap
+  let previouslyFocusedElement = null;
+
+  function openSettingsModal() {
+    previouslyFocusedElement = document.activeElement;
+    settingsModal.classList.remove('hidden');
+    // Place focus on the first interactive element or the close button
+    const firstInput = geminiApiKeyInput || closeSettingsBtn;
+    if (firstInput) {
+      setTimeout(() => firstInput.focus(), 50);
+    }
+  }
+
+  function closeSettingsModal() {
+    settingsModal.classList.add('hidden');
+    if (previouslyFocusedElement && typeof previouslyFocusedElement.focus === 'function') {
+      previouslyFocusedElement.focus();
+    }
+  }
+
+  settingsBtn.addEventListener('click', openSettingsModal);
+  closeSettingsBtn.addEventListener('click', closeSettingsModal);
+  const cancelSettingsBtn = document.getElementById('cancelSettingsBtn');
+  if (cancelSettingsBtn) {
+    cancelSettingsBtn.addEventListener('click', closeSettingsModal);
+  }
+  settingsModal.addEventListener('click', (e) => {
+    if (e.target === settingsModal) {
+      closeSettingsModal();
+    }
+  });
+
+  // Settings Modal Keyboard Trap & Escape Dismiss
+  document.addEventListener('keydown', (e) => {
+    if (settingsModal.classList.contains('hidden')) return;
+
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      closeSettingsModal();
+      return;
+    }
+
+    if (e.key === 'Tab') {
+      const focusable = settingsModal.querySelectorAll(
+        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      );
+      if (!focusable || focusable.length === 0) return;
+
+      const firstEl = focusable[0];
+      const lastEl = focusable[focusable.length - 1];
+
+      if (e.shiftKey) {
+        if (document.activeElement === firstEl) {
+          e.preventDefault();
+          lastEl.focus();
+        }
+      } else {
+        if (document.activeElement === lastEl) {
+          e.preventDefault();
+          firstEl.focus();
+        }
+      }
+    }
+  });
+
   saveSettingsBtn.addEventListener('click', () => {
     geminiApiKey = geminiApiKeyInput.value.trim();
     samplingDensity = samplingDensitySelect.value;
     localStorage.setItem('veritas_gemini_key', geminiApiKey);
     localStorage.setItem('veritas_sampling_density', samplingDensity);
-    settingsModal.classList.add('hidden');
+    closeSettingsModal();
     alert('Forensic settings saved successfully.');
   });
 
