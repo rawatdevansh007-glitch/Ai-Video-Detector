@@ -7,17 +7,18 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 import sys
-# Ensure backend directory is in sys.path
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-
-from engine import ForensicEngine, DEFAULT_FORENSIC_WEIGHTS
-
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 
-# Paths
+# Ensure backend and project root directories are in sys.path
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_DIR = os.path.dirname(BASE_DIR)
+if BASE_DIR not in sys.path:
+    sys.path.insert(0, BASE_DIR)
+if PROJECT_DIR not in sys.path:
+    sys.path.insert(0, PROJECT_DIR)
+
+from engine import ForensicEngine, DEFAULT_FORENSIC_WEIGHTS
 CACHE_DIR = os.path.join(PROJECT_DIR, "cache")
 FRONTEND_DIR = os.path.join(PROJECT_DIR, "frontend")
 SAMPLES_DIR = os.path.join(PROJECT_DIR, "samples")

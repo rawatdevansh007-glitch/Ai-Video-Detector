@@ -6,6 +6,7 @@ FROM python:3.11-slim
 # Prevent Python from writing .pyc files and enable unbuffered logging
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
+    PYTHONPATH="/app:/app/backend" \
     PORT=10000
 
 # Install required system dependencies (FFmpeg for video transcoding, GL/glib for vision codecs, curl for health checks)
@@ -22,6 +23,7 @@ WORKDIR /app
 # Copy dependency requirements first to leverage Docker layer caching
 COPY requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu && \
     pip install --no-cache-dir -r requirements.txt
 
 # Copy project files into container
