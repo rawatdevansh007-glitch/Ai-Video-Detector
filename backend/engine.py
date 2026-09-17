@@ -19,12 +19,12 @@ from detectors.c2pa_checker import C2PAChecker
 from training.feature_extractor import ForensicFeatureExtractor
 from training.trainer import DEFAULT_MODEL_PATH, ModelTrainer
 
-# Requirement 1: Default configuration dictionary for forensic domain weights
+# Requirement 4: Default configuration dictionary for forensic domain weights (CNN-favored)
 DEFAULT_FORENSIC_WEIGHTS = {
-    'biometric': 0.50,
-    'optical_flow': 0.20,
-    'fft': 0.15,
-    'prnu': 0.15
+    'biometric': 0.70,
+    'optical_flow': 0.15,
+    'fft': 0.05,
+    'prnu': 0.10
 }
 
 
@@ -35,13 +35,16 @@ def adjust_weights_for_compression(
     """
     Requirement 4: Video Compression Mitigation
     If heavy video compression is detected (< 2 Mbps for 1080p equivalent),
-    decrease the fft weight by 0.10 and distribute it equally to biometric (+0.05) and optical_flow (+0.05).
+    decrease the fft weight (up to 0.05) to reduce compression high-frequency false alarms,
+    and distribute it equally to biometric (+0.025) and optical_flow (+0.025), preserving sum = 1.0.
     """
     adjusted = dict(weights)
     if is_heavy_compression:
-        adjusted['fft'] = max(0.0, round(adjusted['fft'] - 0.10, 4))
-        adjusted['biometric'] = round(adjusted['biometric'] + 0.05, 4)
-        adjusted['optical_flow'] = round(adjusted['optical_flow'] + 0.05, 4)
+        reduction = min(adjusted.get('fft', 0.05), 0.05)
+        adjusted['fft'] = max(0.0, round(adjusted['fft'] - reduction, 4))
+        half_shift = round(reduction / 2.0, 4)
+        adjusted['biometric'] = round(adjusted['biometric'] + half_shift, 4)
+        adjusted['optical_flow'] = round(adjusted['optical_flow'] + (reduction - half_shift), 4)
         adjusted['prnu'] = round(adjusted['prnu'], 4)
         return adjusted, True
     return adjusted, False
@@ -357,6 +360,16 @@ class ForensicEngine:
             else:
                 applied_weights = dict(base_weights)
 
+        # Requirement 5: Add Raw Score Debugging Output right before final score calculation
+        print("\n" + "=" * 56)
+        print("[DEBUG FORENSIC DETECTORS - RAW MODULE SCORES]")
+        print(f"  Biometric (CNN & Seam) Score : {domain_scores['biometric']:.4f}")
+        print(f"  Optical Flow (Motion) Score  : {domain_scores['optical_flow']:.4f}")
+        print(f"  FFT (Spectral) Score         : {domain_scores['fft']:.4f}")
+        print(f"  PRNU (Noise Residual) Score  : {domain_scores['prnu']:.4f}")
+        print(f"  Applied Ensemble Weights     : {applied_weights}")
+        print("=" * 56 + "\n")
+
         # Calculate final anomaly score using \sum_{i=1}^n (w_i * A_i)
         final_anomaly_score = sum(applied_weights[k] * domain_scores[k] for k in applied_weights)
         final_anomaly_score = float(np.clip(final_anomaly_score, 0.0, 1.0))
@@ -396,10 +409,10 @@ class ForensicEngine:
             "applied_weights": applied_weights
         }
 
-        # 5. Verdict Classification
-        if final_anomaly_score >= 0.50:
+        # Requirement 3: Verdict Classification with Sigmoid Decision Threshold > 0.65
+        if final_anomaly_score > 0.65:
             verdict = "AI_GENERATED"
-            confidence_level = "High" if final_anomaly_score >= 0.70 else "Moderate"
+            confidence_level = "High" if final_anomaly_score >= 0.75 else "Moderate"
             mitigate_note = " [Heavy Compression Mitigated]" if compression_mitigated else ""
             summary_explanation = (
                 f"Video exhibits strong mathematical indicators of synthetic AI generation "

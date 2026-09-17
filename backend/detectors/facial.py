@@ -4,6 +4,29 @@ import numpy as np
 from typing import Dict, Any, Tuple, List, Optional
 from .cnn_detector import PyTorchResNet50Detector
 
+def crop_face_with_margin(
+    image: np.ndarray,
+    bbox: Tuple[int, int, int, int],
+    margin: float = 0.20
+) -> Tuple[np.ndarray, Tuple[int, int, int, int]]:
+    """
+    Crops a face from an image with a specified percentage margin (default 20%)
+    applied to all sides (top, bottom, left, right).
+    Ensures padded coordinates strictly do not exceed actual frame dimensions.
+    Returns (face_crop, (x1, y1, x2, y2)).
+    """
+    x, y, w, h = bbox
+    h_img, w_img = image.shape[:2]
+    pad_w = int(w * margin)
+    pad_h = int(h * margin)
+    x1 = max(0, x - pad_w)
+    y1 = max(0, y - pad_h)
+    x2 = min(w_img, x + w + pad_w)
+    y2 = min(h_img, y + h + pad_h)
+    crop = image[y1:y2, x1:x2].copy()
+    return crop, (x1, y1, x2, y2)
+
+
 class FacialSeamDetector:
     """
     Facial & Boundary Seam Detection with PyTorch ResNet-50 Deep Learning
@@ -26,6 +49,7 @@ class FacialSeamDetector:
     ) -> List[Dict[str, Any]]:
         """
         Detects and extracts an array of cropped faces from a frame.
+        Applies a 20% margin to all sides (top, bottom, left, right) clamped to image boundaries.
         Optionally saves each face crop as frame_{idx}_face_{face_idx}.jpg.
         """
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) if len(image.shape) == 3 else image
@@ -41,15 +65,10 @@ class FacialSeamDetector:
             return face_items
 
         for face_idx, (x, y, w, h) in enumerate(faces):
-            # Crop with boundary padding
-            pad_x = int(w * 0.15)
-            pad_y = int(h * 0.15)
-            x1 = max(0, x - pad_x)
-            y1 = max(0, y - pad_y)
-            x2 = min(w_img, x + w + pad_x)
-            y2 = min(h_img, y + h + pad_y)
-
-            face_crop = image[y1:y2, x1:x2].copy()
+            # 20% padding margin to all sides (top, bottom, left, right) bounded by frame dimensions
+            face_crop, (x1, y1, x2, y2) = crop_face_with_margin(
+                image, (int(x), int(y), int(w), int(h)), margin=0.20
+            )
             face_roi_gray = gray[y:y+h, x:x+w]
             outer_roi_gray = gray[y1:y2, x1:x2]
 

@@ -1487,10 +1487,10 @@ document.addEventListener('DOMContentLoaded', () => {
       c2paReason = "C2PA ClaimGenerator declared synthetic provenance (trainedAlgorithmicMedia)";
     }
 
-    // Weights configuration (Requirements 1 & 4)
-    let baseWeights = { biometric: 0.5, optical_flow: 0.2, fft: 0.15, prnu: 0.15 };
+    // Weights configuration (Requirements 1 & 4 - CNN-favored)
+    let baseWeights = { biometric: 0.70, optical_flow: 0.15, fft: 0.05, prnu: 0.10 };
     if (isHeavyCompression) {
-      baseWeights = { biometric: 0.55, optical_flow: 0.25, fft: 0.05, prnu: 0.15 };
+      baseWeights = { biometric: 0.725, optical_flow: 0.175, fft: 0.0, prnu: 0.10 };
     }
 
     const frameResults = [];
@@ -1662,9 +1662,9 @@ document.addEventListener('DOMContentLoaded', () => {
     finalAnomalyScore = Math.min(1.0, Math.max(0.0, finalAnomalyScore));
 
     let verdict, confidenceLevel, summaryExplanation;
-    if (finalAnomalyScore >= 0.50) {
+    if (finalAnomalyScore > 0.65) {
       verdict = "AI_GENERATED";
-      confidenceLevel = finalAnomalyScore >= 0.70 ? "High" : "Moderate";
+      confidenceLevel = finalAnomalyScore >= 0.75 ? "High" : "Moderate";
       const compNote = isHeavyCompression ? " [Heavy Compression Mitigated]" : "";
       summaryExplanation = `Video exhibits strong mathematical indicators of synthetic AI generation (Confidence: ${Math.round(finalAnomalyScore * 100)}%${compNote}). Spectral analysis detected ${Math.round(combSpectral * 100)}% anomalous frequency patterns, accompanied by ${Math.round(combTemporal * 100)}% temporal warping.`;
     } else if (finalAnomalyScore >= 0.38) {

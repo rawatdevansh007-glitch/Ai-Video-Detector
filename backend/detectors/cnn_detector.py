@@ -51,7 +51,7 @@ class PyTorchResNet50Detector:
                 self.model.to(self.device)
                 self.model.eval()
 
-                # ImageNet standardization transforms
+                # Standard ImageNet normalization transforms: mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
                 self.transform = transforms.Compose([
                     transforms.Resize((224, 224)),
                     transforms.ToTensor(),
@@ -64,13 +64,38 @@ class PyTorchResNet50Detector:
                 print(f"Notice: Could not initialize ResNet-50 weights ({e}). Running in calibrated mode.")
                 self.has_pytorch = False
                 self.model = None
+                self.transform = None
         else:
             self.device = "cpu"
             self.model = None
+            self.transform = None
+
+    def preprocess_face(self, face_bgr: np.ndarray) -> Optional[Any]:
+        """
+        Data pipeline preprocessing function:
+        Converts BGR face crop to RGB PIL Image and applies torchvision.transforms
+        with standard ImageNet normalization:
+        mean=[0.485, 0.456, 0.406] and std=[0.229, 0.224, 0.225].
+        Returns normalized 4D tensor [1, 3, 224, 224] placed on model device.
+        """
+        if face_bgr is None or face_bgr.size == 0:
+            return None
+
+        if not self.has_pytorch or self.transform is None:
+            return None
+
+        if len(face_bgr.shape) == 3:
+            rgb = cv2.cvtColor(face_bgr, cv2.COLOR_BGR2RGB)
+        else:
+            rgb = cv2.cvtColor(face_bgr, cv2.COLOR_GRAY2RGB)
+
+        pil_img = Image.fromarray(rgb)
+        tensor = self.transform(pil_img).unsqueeze(0).to(self.device)
+        return tensor
 
     def predict_face(self, face_bgr: np.ndarray) -> float:
         """
-        Runs inference on a single BGR face crop.
+        Runs inference on a single BGR face crop using PyTorch CNN.
         Returns a single probability score in [0.0, 1.0].
         """
         if face_bgr is None or face_bgr.size == 0:
@@ -81,13 +106,9 @@ class PyTorchResNet50Detector:
             return 0.15
 
         try:
-            if len(face_bgr.shape) == 3:
-                rgb = cv2.cvtColor(face_bgr, cv2.COLOR_BGR2RGB)
-            else:
-                rgb = cv2.cvtColor(face_bgr, cv2.COLOR_GRAY2RGB)
-
-            pil_img = Image.fromarray(rgb)
-            tensor = self.transform(pil_img).unsqueeze(0).to(self.device)
+            tensor = self.preprocess_face(face_bgr)
+            if tensor is None:
+                return 0.15
 
             with torch.no_grad():
                 output = self.model(tensor)

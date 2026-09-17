@@ -42,10 +42,10 @@ class TestWeightedEnsembleAndPyTorch(unittest.TestCase):
     def test_default_forensic_weights_configuration(self):
         """Validates default forensic domain weights dictionary."""
         expected = {
-            'biometric': 0.5,
-            'optical_flow': 0.2,
-            'fft': 0.15,
-            'prnu': 0.15
+            'biometric': 0.70,
+            'optical_flow': 0.15,
+            'fft': 0.05,
+            'prnu': 0.10
         }
         self.assertEqual(DEFAULT_FORENSIC_WEIGHTS, expected)
         self.assertAlmostEqual(sum(DEFAULT_FORENSIC_WEIGHTS.values()), 1.0, places=5)
@@ -216,22 +216,22 @@ class TestWeightedEnsembleAndPyTorch(unittest.TestCase):
     # 4. Video Compression Mitigation
     # -------------------------------------------------------------
     def test_compression_weight_adjustment(self):
-        """Verifies weight adjustment: fft -0.10, biometric +0.05, optical_flow +0.05."""
+        """Verifies weight adjustment: fft shifted to biometric (+0.025) and optical_flow (+0.025)."""
         initial_weights = {
-            'biometric': 0.50,
-            'optical_flow': 0.20,
-            'fft': 0.15,
-            'prnu': 0.15
+            'biometric': 0.70,
+            'optical_flow': 0.15,
+            'fft': 0.05,
+            'prnu': 0.10
         }
         
         # When heavy compression is detected (< 2 Mbps for 1080p)
         adj_weights, is_mitigated = adjust_weights_for_compression(initial_weights, is_heavy_compression=True)
         
         self.assertTrue(is_mitigated)
-        self.assertAlmostEqual(adj_weights['fft'], 0.05, places=4)
-        self.assertAlmostEqual(adj_weights['biometric'], 0.55, places=4)
-        self.assertAlmostEqual(adj_weights['optical_flow'], 0.25, places=4)
-        self.assertAlmostEqual(adj_weights['prnu'], 0.15, places=4)
+        self.assertAlmostEqual(adj_weights['fft'], 0.0, places=4)
+        self.assertAlmostEqual(adj_weights['biometric'], 0.725, places=4)
+        self.assertAlmostEqual(adj_weights['optical_flow'], 0.175, places=4)
+        self.assertAlmostEqual(adj_weights['prnu'], 0.10, places=4)
         self.assertAlmostEqual(sum(adj_weights.values()), 1.0, places=5)
 
     def test_bitrate_and_compression_detection(self):
@@ -246,6 +246,60 @@ class TestWeightedEnsembleAndPyTorch(unittest.TestCase):
         self.assertIsInstance(bitrate_mbps, float)
         self.assertIsInstance(eff_bitrate, float)
         self.assertIsInstance(is_heavy, bool)
+
+    # -------------------------------------------------------------
+    # 5. Tests for False Positive Fixes (20% Margin, Normalization, Threshold)
+    # -------------------------------------------------------------
+    def test_face_cropping_20_percent_margin_and_clamping(self):
+        """Verifies 20% margin calculation on all 4 sides and boundary clamping."""
+        from detectors.facial import crop_face_with_margin
+        img = np.zeros((200, 300, 3), dtype=np.uint8)
+        # Face at x=50, y=50, w=100, h=100
+        # 20% padding is 20px on each side
+        # Expected: x1=30, y1=30, x2=170, y2=170
+        crop, (x1, y1, x2, y2) = crop_face_with_margin(img, (50, 50, 100, 100), margin=0.20)
+        self.assertEqual((x1, y1, x2, y2), (30, 30, 170, 170))
+        self.assertEqual(crop.shape, (140, 140, 3))
+
+        # Face near image boundary (should clamp cleanly to [0, 0, 300, 200])
+        crop_bound, (bx1, by1, bx2, by2) = crop_face_with_margin(img, (10, 10, 100, 100), margin=0.20)
+        self.assertEqual(bx1, 0)
+        self.assertEqual(by1, 0)
+        self.assertLessEqual(bx2, 300)
+        self.assertLessEqual(by2, 200)
+
+    def test_pytorch_tensor_normalization_imagenet_params(self):
+        """Verifies standard ImageNet normalization in preprocessing pipeline."""
+        detector = PyTorchResNet50Detector()
+        self.assertTrue(detector.has_pytorch)
+        
+        # Check transform normalization params
+        normalize_transform = None
+        for t in detector.transform.transforms:
+            if isinstance(t, torch.nn.Module) or hasattr(t, 'mean'):
+                if hasattr(t, 'mean') and hasattr(t, 'std'):
+                    normalize_transform = t
+                    break
+        
+        self.assertIsNotNone(normalize_transform)
+        np.testing.assert_allclose(normalize_transform.mean, [0.485, 0.456, 0.406], atol=1e-3)
+        np.testing.assert_allclose(normalize_transform.std, [0.229, 0.224, 0.225], atol=1e-3)
+
+        # Test preprocess_face
+        dummy_face = np.full((100, 100, 3), 128, dtype=np.uint8)
+        tensor = detector.preprocess_face(dummy_face)
+        self.assertIsNotNone(tensor)
+        self.assertEqual(tensor.shape, (1, 3, 224, 224))
+
+    def test_verdict_decision_threshold_at_065(self):
+        """Verifies videos are classified as AI_GENERATED only when score > 0.65."""
+        # Check classification at boundary
+        # Under new rule: score <= 0.65 should NOT be AI_GENERATED (e.g. SUSPICIOUS)
+        # score > 0.65 should be AI_GENERATED
+        real_video = os.path.join(self.samples_dir, "authentic_camera_sample.mp4")
+        result = self.engine.analyze_video(real_video, sample_count=4, use_custom_model=False)
+        self.assertNotEqual(result["verdict"], "AI_GENERATED")
+        self.assertLessEqual(result["final_anomaly_score"], 0.65)
 
 
 if __name__ == "__main__":
