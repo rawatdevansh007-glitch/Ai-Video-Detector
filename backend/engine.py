@@ -313,6 +313,7 @@ class ForensicEngine:
                 "noise_score": round(float(noise_score), 3),
                 "facial_score": round(float(face_score), 3) if has_face else None,
                 "has_face": has_face,
+                "faces": face_details.get("faces", []),
                 "diagnostics": frame_diag
             })
 
@@ -446,6 +447,7 @@ class ForensicEngine:
             "composite_ai_score": round(final_anomaly_score, 3),
             "applied_weights": applied_weights,
             "compression_mitigation_applied": compression_mitigated,
+            "low_bitrate_flag": compression_mitigated,
             "confidence_level": confidence_level,
             "detection_method": detection_method,
             "visual_scan_bypassed": False,

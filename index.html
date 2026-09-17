@@ -234,6 +234,80 @@
               <span>Ensemble Weight: <strong id="mlModelWeightVal">60% ML + 40% Heuristics</strong></span>
             </div>
           </div>
+
+          <!-- Weighted Ensemble Scoring Breakdown Component -->
+          <div id="ensembleBreakdownBox" class="ensemble-breakdown-box">
+            <div class="ensemble-breakdown-header">
+              <div class="ensemble-title">
+                <i class="fa-solid fa-scale-balanced mr-1.5 text-cyan-400"></i>
+                <span>Weighted Ensemble Decision Breakdown</span>
+              </div>
+              <div class="ensemble-formula">
+                Final Score = &sum;(w<sub>i</sub> &times; A<sub>i</sub>) = <strong id="ensembleFinalScoreVal" class="text-cyan-400">0.0%</strong>
+              </div>
+            </div>
+            <div class="ensemble-grid">
+              <!-- Biometrics item -->
+              <div class="ensemble-item" id="ensembleItemBio">
+                <div class="ensemble-item-meta">
+                  <span class="ensemble-item-name">Biometrics</span>
+                  <span class="ensemble-item-weight" id="ensembleWeightBio">Weight: 50%</span>
+                </div>
+                <div class="ensemble-bar-track">
+                  <div class="ensemble-bar-fill" id="ensembleBarBio" style="width: 0%"></div>
+                </div>
+                <div class="ensemble-item-sub">
+                  <span class="ensemble-raw-score" id="ensembleRawBio">Score: 0%</span>
+                  <span class="ensemble-contrib" id="ensembleContribBio">+0.00</span>
+                </div>
+              </div>
+
+              <!-- Optical Flow item -->
+              <div class="ensemble-item" id="ensembleItemFlow">
+                <div class="ensemble-item-meta">
+                  <span class="ensemble-item-name">Optical Flow</span>
+                  <span class="ensemble-item-weight" id="ensembleWeightFlow">Weight: 20%</span>
+                </div>
+                <div class="ensemble-bar-track">
+                  <div class="ensemble-bar-fill" id="ensembleBarFlow" style="width: 0%"></div>
+                </div>
+                <div class="ensemble-item-sub">
+                  <span class="ensemble-raw-score" id="ensembleRawFlow">Score: 0%</span>
+                  <span class="ensemble-contrib" id="ensembleContribFlow">+0.00</span>
+                </div>
+              </div>
+
+              <!-- 2D FFT item -->
+              <div class="ensemble-item" id="ensembleItemFFT">
+                <div class="ensemble-item-meta">
+                  <span class="ensemble-item-name">2D FFT Spectral</span>
+                  <span class="ensemble-item-weight" id="ensembleWeightFFT">Weight: 15%</span>
+                </div>
+                <div class="ensemble-bar-track">
+                  <div class="ensemble-bar-fill" id="ensembleBarFFT" style="width: 0%"></div>
+                </div>
+                <div class="ensemble-item-sub">
+                  <span class="ensemble-raw-score" id="ensembleRawFFT">Score: 0%</span>
+                  <span class="ensemble-contrib" id="ensembleContribFFT">+0.00</span>
+                </div>
+              </div>
+
+              <!-- PRNU item -->
+              <div class="ensemble-item" id="ensembleItemPRNU">
+                <div class="ensemble-item-meta">
+                  <span class="ensemble-item-name">PRNU Noise</span>
+                  <span class="ensemble-item-weight" id="ensembleWeightPRNU">Weight: 15%</span>
+                </div>
+                <div class="ensemble-bar-track">
+                  <div class="ensemble-bar-fill" id="ensembleBarPRNU" style="width: 0%"></div>
+                </div>
+                <div class="ensemble-item-sub">
+                  <span class="ensemble-raw-score" id="ensembleRawPRNU">Score: 0%</span>
+                  <span class="ensemble-contrib" id="ensembleContribPRNU">+0.00</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </section>
 
         <!-- Inspector Area: Sticky Video Player + Timeline (Left) & 4 Sequential Forensic Signals (Right) -->
@@ -256,6 +330,11 @@
               <div class="timeline-meta">
                 <span class="timeline-label">ANOMALY TIMELINE</span>
                 <span id="inspectedFrameTime" class="timeline-frame-time">Frame #1 (0.0s)</span>
+              </div>
+
+              <!-- Interactive Chart.js Anomaly Timeline Graph -->
+              <div class="timeline-chart-wrap">
+                <canvas id="anomalyChartCanvas" height="85" style="width:100%; height:85px; display:block;"></canvas>
               </div>
 
               <!-- Interactive scrubber bar showing anomaly spikes -->
@@ -308,6 +387,15 @@
                 <p class="signal-desc">
                   Analyzes high-frequency radial Fourier harmonics to uncover periodic artifact grids. Authentic cameras exhibit smooth exponential power falloff, whereas diffusion and generative models leave characteristic mathematical lattice peaks.
                 </p>
+
+                <!-- High Video Compression Warning Banner -->
+                <div id="compressionWarningBanner" class="compression-warning-banner hidden" role="alert">
+                  <i class="fa-solid fa-triangle-exclamation text-amber-400 text-sm mt-0.5 shrink-0"></i>
+                  <div class="compression-warning-text">
+                    <strong>High Video Compression Detected:</strong> High-frequency spectral analysis weight has been reduced to prevent false positives.
+                  </div>
+                </div>
+
                 <div class="signal-metric">
                   <span class="signal-score-num" id="spectralScoreText">0%</span>
                   <span class="signal-score-label">anomaly score</span>
@@ -371,6 +459,15 @@
                 <p class="signal-desc">
                   Inspects facial boundary contours, landmark consistency, and corneal reflection symmetry for deepfake blending seams. Synthetic replacements introduce edge gradient discontinuities and unnatural boundary warping around facial features.
                 </p>
+
+                <!-- Multi-Subject Navigation (Tabbed Interface) -->
+                <div id="multiSubjectContainer" class="multi-subject-container hidden">
+                  <span class="subject-tabs-label">DETECTED SUBJECTS IN FRAME:</span>
+                  <div id="subjectTabsList" class="subject-tabs-list" role="tablist" aria-label="Detected Subjects">
+                    <!-- Populated dynamically via JS -->
+                  </div>
+                </div>
+
                 <div class="signal-metric">
                   <span class="signal-score-num" id="facialScoreText">0%</span>
                   <span class="signal-score-label">anomaly score</span>
@@ -380,7 +477,35 @@
                 <div id="facialScoreBar" class="hidden"></div>
               </div>
               <div class="signal-media">
-                <canvas id="faceCanvas" data-canvas="canvas4" role="img" aria-label="Facial boundary contour heatmap showing biometric boundary seam artifacts" class="signal-canvas" width="1280" height="720"></canvas>
+                <!-- Dual-Layer Grad-CAM Viewport -->
+                <div class="gradcam-viewport" id="gradcamViewport">
+                  <img id="gradcamFaceBase" class="gradcam-base hidden" alt="Cropped Subject Face" />
+                  <img id="gradcamHeatmapOverlay" class="gradcam-overlay mix-blend-overlay hidden" alt="Grad-CAM Activation Heatmap" />
+                  <canvas id="faceCanvas" data-canvas="canvas4" role="img" aria-label="Facial boundary contour heatmap showing biometric boundary seam artifacts" class="signal-canvas" width="1280" height="720"></canvas>
+                </div>
+
+                <!-- Grad-CAM Interactive Controls -->
+                <div class="gradcam-controls" id="gradcamControls">
+                  <button id="gradcamToggleBtn" class="gradcam-btn active" type="button" title="Toggle Grad-CAM overlay visibility">
+                    <i class="fa-solid fa-layer-group mr-1"></i> <span>Grad-CAM Heatmap</span>
+                  </button>
+
+                  <div class="flex items-center gap-1.5">
+                    <label for="gradcamBlendSelect" class="text-[10px] font-mono text-slate-400">Blend:</label>
+                    <select id="gradcamBlendSelect" class="gradcam-select" aria-label="Grad-CAM blend mode">
+                      <option value="overlay" selected>Overlay</option>
+                      <option value="multiply">Multiply</option>
+                      <option value="screen">Screen</option>
+                      <option value="color">Color</option>
+                      <option value="normal">Normal</option>
+                    </select>
+                  </div>
+
+                  <div class="flex items-center gap-1.5">
+                    <label for="gradcamOpacityRange" class="text-[10px] font-mono text-slate-400">Opacity: <span id="gradcamOpacityVal">85%</span></label>
+                    <input id="gradcamOpacityRange" type="range" min="0" max="100" value="85" class="gradcam-range" aria-label="Grad-CAM opacity" />
+                  </div>
+                </div>
               </div>
             </section>
           </div>
@@ -621,6 +746,7 @@
     </footer>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="app.js"></script>
   <script type="module">
     import { revealInit, revealStagger, parallaxSubtle } from './js/motion.js';

@@ -260,3 +260,172 @@
     top: auto;
   }
 }
+
+/* Interactive Anomaly Timeline Chart */
+.timeline-chart-wrap {
+  width: 100%;
+  position: relative;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  padding: 4px 6px;
+  box-sizing: border-box;
+}
+
+/* Multi-Subject Navigation (Tabbed Interface) */
+.multi-subject-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.subject-tabs-label {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.68rem;
+  letter-spacing: 0.05em;
+  color: var(--muted, #6B6660);
+  text-transform: uppercase;
+}
+
+.subject-tabs-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.subject-tab {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.72rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #94A3B8;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.subject-tab:hover {
+  background: rgba(34, 211, 238, 0.1);
+  border-color: rgba(34, 211, 238, 0.3);
+  color: #E2E8F0;
+}
+
+.subject-tab.active {
+  background: rgba(34, 211, 238, 0.18);
+  border-color: #22D3EE;
+  color: #22D3EE;
+  font-weight: 600;
+  box-shadow: 0 0 10px rgba(34, 211, 238, 0.15);
+}
+
+/* Grad-CAM Dual-Layer Overlay Viewport */
+.gradcam-viewport {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #000000;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gradcam-base {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.gradcam-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  opacity: 0.85;
+  transition: opacity 0.2s ease, mix-blend-mode 0.2s ease;
+}
+
+.gradcam-overlay.hidden {
+  opacity: 0 !important;
+  visibility: hidden;
+}
+
+.gradcam-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+  padding: 0.6rem 0.85rem;
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+}
+
+.gradcam-btn {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.72rem;
+  padding: 0.3rem 0.65rem;
+  border-radius: 4px;
+  background: rgba(34, 211, 238, 0.1);
+  border: 1px solid rgba(34, 211, 238, 0.3);
+  color: #22D3EE;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.gradcam-btn.active {
+  background: #22D3EE;
+  color: #000000;
+  font-weight: 600;
+}
+
+.gradcam-select {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.72rem;
+  padding: 0.25rem 0.5rem;
+  background: #0F172A;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #F8FAFC;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.gradcam-range {
+  width: 80px;
+  vertical-align: middle;
+  cursor: pointer;
+  accent-color: #22D3EE;
+}
+
+/* Video Compression Warning Banner */
+.compression-warning-banner {
+  margin-top: 0.75rem;
+  padding: 0.65rem 0.85rem;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  border-radius: 4px;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  color: #FDE68A;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
+.compression-warning-text strong {
+  color: #FBBF24;
+}

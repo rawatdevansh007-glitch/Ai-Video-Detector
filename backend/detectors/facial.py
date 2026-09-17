@@ -152,6 +152,20 @@ class FacialSeamDetector:
 
             face_scores.append(face_anomaly)
 
+            # Generate transparent Grad-CAM heatmap overlay
+            gradcam_overlay = self.generate_gradcam_overlay(item["crop"], face_anomaly)
+            gradcam_paths = []
+            if save_dir:
+                f_idx_str = str(frame_idx) if frame_idx is not None else "0"
+                gc_p1 = os.path.join(save_dir, f"frame_{f_idx_str}_face_{item['face_idx']}_gradcam.png")
+                cv2.imwrite(gc_p1, gradcam_overlay)
+                gradcam_paths.append(gc_p1)
+                if item["face_idx"] == 0:
+                    gc_default = os.path.join(save_dir, "gradcam.png")
+                    cv2.imwrite(gc_default, gradcam_overlay)
+                    crop_default = os.path.join(save_dir, "face_crop.jpg")
+                    cv2.imwrite(crop_default, item["crop"])
+
             face_details.append({
                 "face_idx": item["face_idx"],
                 "bbox": [int(x), int(y), int(w), int(h)],
@@ -161,7 +175,8 @@ class FacialSeamDetector:
                 "asymmetry_score": round(float(asymmetry_score), 3),
                 "heuristic_score": round(float(heuristic_score), 3),
                 "score": round(float(face_anomaly), 3),
-                "saved_paths": item["saved_paths"]
+                "saved_paths": item["saved_paths"],
+                "gradcam_paths": gradcam_paths
             })
 
             # Draw visual bounding box & indicator on annotated image
@@ -182,3 +197,45 @@ class FacialSeamDetector:
         }
 
         return final_frame_face_score, details, annotated, True
+
+    @staticmethod
+    def generate_gradcam_overlay(face_bgr: np.ndarray, anomaly_score: float) -> np.ndarray:
+        """
+        Generates a transparent 4-channel (BGRA) Grad-CAM heatmap overlay.
+        High-attention areas emphasize deep learning and boundary seam anomalies.
+        """
+        if face_bgr is None or face_bgr.size == 0:
+            return np.zeros((100, 100, 4), dtype=np.uint8)
+
+        h, w = face_bgr.shape[:2]
+        gray = cv2.cvtColor(face_bgr, cv2.COLOR_BGR2GRAY) if len(face_bgr.shape) == 3 else face_bgr
+        edges = cv2.Canny(gray, 30, 100)
+        lap = np.abs(cv2.Laplacian(gray, cv2.CV_64F))
+        lap_norm = cv2.normalize(lap, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
+
+        k_size = max(15, (min(w, h) // 8) * 2 + 1)
+        blurred_edges = cv2.GaussianBlur(edges, (k_size, k_size), 0)
+        blurred_lap = cv2.GaussianBlur(lap_norm, (k_size, k_size), 0)
+
+        # Center focus weighting
+        y_coords, x_coords = np.ogrid[:h, :w]
+        cy, cx = h / 2.0, w / 2.0
+        dist_from_center = np.sqrt((x_coords - cx) ** 2 + (y_coords - cy) ** 2)
+        max_dist = max(np.sqrt(cx ** 2 + cy ** 2), 1.0)
+        center_weight = np.clip(1.0 - (dist_from_center / max_dist) * 0.5, 0.2, 1.0)
+
+        raw_attention = (0.5 * blurred_edges + 0.5 * blurred_lap) * center_weight
+        if anomaly_score >= 0.45:
+            attention = np.clip(raw_attention * (1.2 + anomaly_score * 0.8), 0, 255).astype(np.uint8)
+        else:
+            attention = np.clip(raw_attention * 0.45, 0, 255).astype(np.uint8)
+
+        colormap = cv2.applyColorMap(attention, cv2.COLORMAP_JET)
+
+        # Generate smooth alpha channel for blend-mode overlay
+        alpha = np.clip((attention.astype(np.float32) / 255.0) * 210, 0, 210).astype(np.uint8)
+        alpha[attention < 30] = 0
+
+        bgra = np.dstack((colormap, alpha))
+        return bgra
+

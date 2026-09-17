@@ -125,17 +125,40 @@ async def analyze_video(
 def get_frame_visual(analysis_id: str, frame_idx: int, filter_type: str):
     """
     Returns the visual forensic heatmap image for a specific analyzed frame and filter.
-    Filter types: 'original', 'fft', 'noise', 'flow', 'facial'
+    Filter types: 'original', 'fft', 'noise', 'flow', 'facial', 'gradcam', 'face_crop'
     """
-    # Sanitize inputs
+    frame_dir = os.path.join(CACHE_DIR, analysis_id, f"frame_{frame_idx}")
+
+    # Handle Grad-CAM overlays (PNG transparent or subject-specific)
+    if "gradcam" in filter_type:
+        parts = filter_type.split("_")
+        subject_idx = parts[-1] if len(parts) > 1 and parts[-1].isdigit() else "0"
+        p_sub = os.path.join(frame_dir, f"frame_{frame_idx}_face_{subject_idx}_gradcam.png")
+        if os.path.exists(p_sub):
+            return FileResponse(p_sub, media_type="image/png")
+        p_def = os.path.join(frame_dir, "gradcam.png")
+        if os.path.exists(p_def):
+            return FileResponse(p_def, media_type="image/png")
+
+    # Handle Face crops (JPEG or subject-specific)
+    if "face_crop" in filter_type:
+        parts = filter_type.split("_")
+        subject_idx = parts[-1] if len(parts) > 1 and parts[-1].isdigit() else "0"
+        p_crop = os.path.join(frame_dir, f"frame_{frame_idx}_face_{subject_idx}.jpg")
+        if os.path.exists(p_crop):
+            return FileResponse(p_crop, media_type="image/jpeg")
+        p_def = os.path.join(frame_dir, "face_crop.jpg")
+        if os.path.exists(p_def):
+            return FileResponse(p_def, media_type="image/jpeg")
+
+    # Sanitize standard filters
     valid_filters = ["original", "fft", "noise", "flow", "facial"]
     if filter_type not in valid_filters:
         filter_type = "original"
 
-    img_path = os.path.join(CACHE_DIR, analysis_id, f"frame_{frame_idx}", f"{filter_type}.jpg")
+    img_path = os.path.join(frame_dir, f"{filter_type}.jpg")
     if not os.path.exists(img_path):
-        # Fallback to original if requested filter not present
-        fallback_path = os.path.join(CACHE_DIR, analysis_id, f"frame_{frame_idx}", "original.jpg")
+        fallback_path = os.path.join(frame_dir, "original.jpg")
         if os.path.exists(fallback_path):
             return FileResponse(fallback_path, media_type="image/jpeg")
         raise HTTPException(status_code=404, detail="Forensic frame visual not found.")
