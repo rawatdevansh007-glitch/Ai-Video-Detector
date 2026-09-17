@@ -1600,6 +1600,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       visuals.original = originalDataUrl;
 
+      const isAISeam = (faceScore >= 0.45) || isExplicitAI || isC2PAAI;
       const frameFaces = hasFace ? [
         {
           face_id: 0,
