@@ -1,3 +1,13 @@
+---
+title: VeritasVideo AI Video Forensics
+emoji: 🛡️
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # VeritasVideo | AI Video Forensics & Deepfake Detection
 
 An intelligent, multi-layer video forensics application that enables anyone to upload a video (MP4, WebM, MOV, AVI) and reliably detect whether it is **AI-generated (synthetic / deepfake)** or **real (authentic camera footage)**.
@@ -11,7 +21,8 @@ An intelligent, multi-layer video forensics application that enables anyone to u
    - **Dense Optical Flow & Jitter Analysis**: Measures inter-frame motion coherence, pixel curl, and non-rigid texture morphing/boiling drift.
    - **High-Pass Noise Residual (PRNU)**: Quantifies natural camera sensor shot noise against synthetic spatial over-smoothing and GAN noise anomalies.
    - **Facial Boundary & Biometric Seams**: Checks face contours for deepfake face-swapping blending seams, skin micro-texture consistency, and bilateral symmetry.
-   - **Ensemble Decision Scorer**: Combines mathematical signals into a calibrated confidence score and verdict (Real vs AI).
+   - **PyTorch ResNet-50 Deep Learning Engine**: Analyzes extracted facial crops independently with multi-face array handling and max-pooling.
+   - **Weighted Ensemble Scoring System**: Calculates dynamic confidence using calibrated forensic domain weights and video compression mitigation.
 
 2. **Synchronized Video Player & Anomaly Timeline**
    - Play the video with an interactive timeline displaying exact timestamps where anomalies spike.
@@ -32,7 +43,25 @@ An intelligent, multi-layer video forensics application that enables anyone to u
 
 ---
 
-## Quick Start (Windows)
+## Deploy to Hugging Face Spaces (Recommended — 16 GB Free RAM)
+
+Hugging Face Spaces provides **16 GB RAM for free**, giving optimal performance for PyTorch ResNet-50 and OpenCV video processing.
+
+1. Go to [Hugging Face Spaces](https://huggingface.co/new-space).
+2. Create a new Space with **SDK: Docker** (Hardware: Free 2 vCPU · 16 GB RAM).
+3. Connect your GitHub repository or push this repository via Git:
+   ```bash
+   git remote add hf https://huggingface.co/spaces/<YOUR-USERNAME>/<YOUR-SPACE-NAME>
+   git push hf main
+   ```
+4. Hugging Face will automatically detect the Docker configuration and launch your live application at:
+   `https://huggingface.co/spaces/<YOUR-USERNAME>/<YOUR-SPACE-NAME>`
+
+*(See [`DEPLOY_HUGGINGFACE.md`](DEPLOY_HUGGINGFACE.md) for full guide).*
+
+---
+
+## Quick Start (Local)
 
 ### Option 1: Double-Click
 Double-click `run.bat` (or right-click `run.ps1` -> *Run with PowerShell*).
@@ -55,18 +84,3 @@ If you don't have a video file ready, click the preloaded test buttons on the da
 - **Sample Real Video**: Demonstrates authentic camera sensor noise, natural lighting, and rigid motion physics.
 - **Sample AI-Generated**: Demonstrates synthetic upsampling grid harmonics, texture morphing, and over-smoothed surfaces.
 - **Sample C2PA AI**: Demonstrates instant cryptographic verification via C2PA Content Credentials.
-
----
-
-## Deploy to Render Cloud
-
-VeritasVideo includes complete configurations for deployment on [Render](https://render.com):
-
-- **Render Blueprint**: [`render.yaml`](render.yaml) for 1-click automated setup.
-- **Production Container**: [`Dockerfile`](Dockerfile) with bundled FFmpeg and dynamic port binding.
-- **Full Deployment Guide**: Detailed step-by-step instructions in [`DEPLOY_RENDER.md`](DEPLOY_RENDER.md).
-
-### Quick Deployment Steps:
-1. Push this repository to GitHub or GitLab.
-2. In the [Render Dashboard](https://dashboard.render.com), click **New +** -> **Blueprint** and select your repository.
-3. Render automatically provisions the service and launches it with a free public HTTPS URL (`https://<service-name>.onrender.com`).
