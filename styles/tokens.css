@@ -1,0 +1,61 @@
+/**
+ * VeritasVideo Design Tokens
+ * Aesthetic: Minimalist Editorial Portfolio (Bone / Ink Palette)
+ * Reference: Atmospheric, typography-first, oversized display serif
+ */
+
+:root {
+  /* --- Palette Tokens --- */
+  --bone: #F4F1EC;
+  --ink: #0A0A0A;
+  --anomaly: #B33A2E;
+  --muted: #6B6660;
+
+  /* Heatmap-only Accent Tokens */
+  --heatmap-fft: #7C3AED;      /* 2D FFT spectral radial harmonic accent */
+  --heatmap-flow: #2563EB;     /* Optical flow motion vector accent */
+  --heatmap-noise: #0D9488;    /* PRNU sensor noise residual accent */
+
+  /* Neutral Surface Variations */
+  --bone-surface: #EAE6DF;
+  --bone-border: rgba(10, 10, 10, 0.08);
+  --ink-surface: #141414;
+  --ink-border: rgba(244, 241, 236, 0.12);
+
+  /* --- Type Scale Tokens --- */
+  --type-display: clamp(4rem, 8.5vw, 9rem);
+  --type-h1: clamp(2.5rem, 5vw, 4.5rem);
+  --type-h2: clamp(1.75rem, 3.2vw, 2.75rem);
+  --type-body: clamp(1rem, 1.15vw, 1.125rem);
+  --type-mono-sm: 0.875rem;    /* 14px */
+  --type-mono-xs: 0.75rem;     /* 12px */
+
+  /* Leading & Tracking */
+  --tracking-tight: -0.03em;
+  --tracking-normal: -0.01em;
+  --tracking-wide: 0.05em;
+  --leading-tight: 0.96;
+  --leading-snug: 1.15;
+  --leading-normal: 1.6;
+
+  /* --- Spacing Scale (8px Base) --- */
+  --s1: 0.5rem;    /* 8px */
+  --s2: 1.0rem;    /* 16px */
+  --s3: 1.5rem;    /* 24px */
+  --s4: 2.0rem;    /* 32px */
+  --s5: 2.5rem;    /* 40px */
+  --s6: 3.0rem;    /* 48px */
+  --s7: 3.5rem;    /* 56px */
+  --s8: 4.0rem;    /* 64px */
+  --s9: 4.5rem;    /* 72px */
+  --s10: 5.0rem;   /* 80px */
+  --s11: 5.5rem;   /* 88px */
+  --s12: 6.0rem;   /* 96px */
+
+  /* --- Motion Tokens --- */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-reveal: 1100ms;
+  --dur-micro: 240ms;
+  --dur-standard: 450ms;
+}

@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VeritasVideo | AI Video Forensics & Deepfake Detection</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#ecfeff',
+              400: '#22d3ee',
+              500: '#06b6d4',
+              600: '#0891b2',
+              900: '#164e63',
+            },
+            forensic: {
+              real: '#10b981',
+              fake: '#ef4444',
+              warn: '#f59e0b',
+              dark: '#0a0d14',
+              card: '#111726',
+              border: '#1e293b'
+            }
+          },
+          fontFamily: {
+            mono: ['JetBrains Mono', 'Menlo', 'monospace'],
+            sans: ['Inter', 'system-ui', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+  <!-- Editorial Typography Fonts Preconnect -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&display=swap">
+
+  <!-- Editorial Design System Tokens & Stylesheets (in order) -->
+  <link rel="stylesheet" href="styles/tokens.css">
+  <link rel="stylesheet" href="styles/base.css">
+  <link rel="stylesheet" href="styles/typography.css">
+  <link rel="stylesheet" href="styles/layout.css">
+  <link rel="stylesheet" href="styles/motion.css">
+  <link rel="stylesheet" href="styles/hero.css">
+  <link rel="stylesheet" href="styles/verdict.css">
+  <link rel="stylesheet" href="styles/signal.css">
+  <link rel="stylesheet" href="styles/inspector.css">
+  <link rel="stylesheet" href="styles/peripherals.css">
+  <link rel="stylesheet" href="styles/responsive.css">
+  <link rel="stylesheet" href="styles/a11y.css">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body class="bg-[#0a0d14] text-slate-100 min-h-screen font-sans antialiased selection:bg-cyan-500 selection:text-black">
+
+  <!-- Background Cyber Grid Decoration -->
+  <div class="fixed inset-0 bg-[linear-gradient(to_right,#1e293b15_1px,transparent_1px),linear-gradient(to_bottom,#1e293b15_1px,transparent_1px)] bg-[size:4rem_4rem] pointer-events-none"></div>
+
+  <div class="relative z-10 flex flex-col min-h-screen">
+    <!-- Minimalist Editorial Top Bar -->
+    <header class="editorial-header">
+      <div class="editorial-brand">
+        <span class="editorial-mark">VeritasVideo</span>
+        <span class="editorial-tag">Forensic Intelligence</span>
+      </div>
+      <div class="editorial-nav-actions">
+        <button id="modelTrainingBtn" class="editorial-nav-btn" type="button" title="Manage Dataset & Train Custom ML Model">
+          Model Training
+        </button>
+        <button id="settingsBtn" class="settings-trigger" type="button" title="Forensic Settings & API Keys">
+          Settings
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-1 w-full space-y-12">
+      
+      <!-- Full-Viewport Editorial Hero -->
+      <section class="hero" id="uploadSection" data-reveal>
+        <div class="hero-content">
+          <h1 class="hero-title">Is this video real?</h1>
+          <p class="hero-subline">Multi-signal forensic engine — FFT, optical flow, PRNU, facial seams.</p>
+
+          <!-- Quiet Drag-Drop Zone: Thin dashed bottom rule -->
+          <div id="dropZone" class="hero-dropzone" role="button" tabindex="0" aria-label="Upload video file for forensic analysis. Drop video file here or press Enter or Space to browse.">
+            <input type="file" id="videoInput" accept="video/mp4,video/webm,video/quicktime,video/x-msvideo" class="hidden">
+            <div class="dropzone-label">
+              <span class="dropzone-prompt">Drop video file here, or <span class="dropzone-action">browse</span></span>
+              <span class="dropzone-formats">MP4, WebM, MOV, AVI — max 100MB</span>
+            </div>
+          </div>
+
+          <!-- Selected File Preview & Action -->
+          <div id="fileInfoCard" class="hidden hero-file-card">
+            <div class="hero-file-meta">
+              <span class="hero-file-dot">●</span>
+              <span id="fileName" class="hero-file-name">sample_video.mp4</span>
+              <span id="fileDetails" class="hero-file-details">12.4 MB • MP4</span>
+            </div>
+            <div class="hero-file-actions">
+              <button id="removeFileBtn" class="hero-btn-remove" type="button">Remove</button>
+              <button id="startAnalysisBtn" class="hero-btn-analyze" type="button">
+                <span>Run Forensic Analysis</span>
+                <span>→</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Minimalist Calibration Samples (Directly under drag zone) -->
+          <div class="hero-samples-editorial">
+            <button id="sampleRealBtn" class="sample-link" type="button">Sample Real</button>
+            <span class="sample-sep">·</span>
+            <button id="sampleAIBtn" class="sample-link" type="button">Sample AI-Generated</button>
+            <span class="sample-sep">·</span>
+            <button id="sampleC2PABtn" class="sample-link" type="button">Sample C2PA AI</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Processing & Progress Section (Hidden by default) -->
+      <section id="progressSection" class="hidden max-w-2xl mx-auto py-8">
+        <div class="bg-slate-900/70 border border-slate-800 rounded-2xl p-8 backdrop-blur text-center space-y-6 shadow-2xl">
+          <div class="relative w-24 h-24 mx-auto">
+            <div class="absolute inset-0 rounded-full border-4 border-cyan-500/20 animate-ping"></div>
+            <div class="w-24 h-24 rounded-full border-4 border-cyan-500 border-t-transparent animate-spin flex items-center justify-center"></div>
+            <div class="absolute inset-0 flex items-center justify-center text-cyan-400 text-2xl">
+              <i class="fa-solid fa-dna animate-pulse"></i>
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <h3 id="progressStepTitle" class="text-lg font-bold text-white tracking-wide">Deconstructing Video Stream...</h3>
+            <p id="progressStepDetail" class="text-xs text-slate-400 font-mono">Extracting keyframes and computing continuous optical flow fields</p>
+          </div>
+
+          <!-- Progress bar -->
+          <div class="w-full bg-slate-950 rounded-full h-2 overflow-hidden border border-slate-800">
+            <div id="progressBar" class="bg-gradient-to-r from-cyan-500 to-blue-500 h-full rounded-full transition-all duration-500" style="width: 25%"></div>
+          </div>
+
+          <!-- Diagnostic Checkmarks -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 text-[11px] font-mono text-slate-400">
+            <div id="step-fft" class="p-2 rounded bg-slate-950/50 border border-slate-800/80 flex items-center justify-center space-x-1">
+              <i class="fa-solid fa-wave-square text-slate-600"></i>
+              <span>FFT Spectrum</span>
+            </div>
+            <div id="step-temporal" class="p-2 rounded bg-slate-950/50 border border-slate-800/80 flex items-center justify-center space-x-1">
+              <i class="fa-solid fa-arrows-split-up-and-left text-slate-600"></i>
+              <span>Optical Flow</span>
+            </div>
+            <div id="step-noise" class="p-2 rounded bg-slate-950/50 border border-slate-800/80 flex items-center justify-center space-x-1">
+              <i class="fa-solid fa-chart-line text-slate-600"></i>
+              <span>Noise Residual</span>
+            </div>
+            <div id="step-seam" class="p-2 rounded bg-slate-950/50 border border-slate-800/80 flex items-center justify-center space-x-1">
+              <i class="fa-solid fa-user-shield text-slate-600"></i>
+              <span>Facial Seams</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Forensic Results Dashboard (Hidden until analysis finishes) -->
+      <section id="resultsDashboard" class="hidden space-y-8 animate-fadeIn">
+        
+        <!-- Editorial Verdict Section -->
+        <section class="verdict" id="verdictBanner" data-reveal>
+          <!-- Line 1: mono-xs label "VERDICT" -->
+          <div class="verdict-label">
+            <span>VERDICT</span>
+            <span id="c2paBadge" class="hidden verdict-tag verdict-tag-c2pa"><span id="c2paBadgeText">C2PA Verified AI</span></span>
+            <span id="mlModelBadge" class="hidden verdict-tag verdict-tag-ml"><span id="mlModelBadgeText">Trained ML Active</span></span>
+          </div>
+
+          <!-- Line 2: display serif, clamp(5rem, 14vw, 12rem), the verdict word -->
+          <div class="verdict-headline-wrap">
+            <h2 id="verdictHeadline" class="verdict-word">
+              <span id="verdictText"><span id="verdictBadge">AI-Generated</span></span>
+            </h2>
+          </div>
+
+          <!-- Line 3: mono-sm, confidence as "84.2% confidence" plus ensemble sub-scores as horizontal run of mono-xs values -->
+          <div class="verdict-meta">
+            <div class="verdict-confidence">
+              <span id="confidenceValue"><span id="scorePercentValue">89.0%</span></span>
+              <span id="scoreLabelText" class="verdict-confidence-label">confidence</span>
+              <span class="verdict-confidence-bracket">(<span id="verdictRiskPill">High Confidence</span>)</span>
+            </div>
+
+            <!-- Horizontal run of mono-xs values (FFT / Flow / PRNU / Face) -->
+            <div class="verdict-subscores">
+              <span class="subscore-item">FFT <strong class="subscore-val" id="verdictSubFFT">92%</strong></span>
+              <span class="subscore-sep">/</span>
+              <span class="subscore-item">FLOW <strong class="subscore-val" id="verdictSubFlow">76%</strong></span>
+              <span class="subscore-sep">/</span>
+              <span class="subscore-item">PRNU <strong class="subscore-val" id="verdictSubPRNU">85%</strong></span>
+              <span class="subscore-sep">/</span>
+              <span class="subscore-item">FACE <strong class="subscore-val" id="verdictSubFace">45%</strong></span>
+            </div>
+          </div>
+
+          <!-- Detailed Explanation -->
+          <p id="verdictExplanation" class="verdict-explanation">
+            Synthetic generative video artifacts detected. Significant high-frequency periodic grid spikes and unnatural inter-frame texture morphing were identified across multiple analyzed segments.
+          </p>
+
+          <!-- Hidden compatibility elements to ensure existing legacy references never error -->
+          <div id="verdictIconContainer" class="hidden"></div>
+          <svg class="hidden"><circle id="scoreDialCircle" cx="60" cy="60" r="50"></circle></svg>
+
+          <!-- C2PA Provenance Box -->
+          <div id="c2paDetailsBox" class="hidden verdict-box verdict-box-c2pa">
+            <div class="verdict-box-title"><i class="fa-solid fa-fingerprint mr-1.5"></i> C2PA Cryptographic Provenance Verified</div>
+            <div class="verdict-box-content">
+              <span>Issuer: <strong id="c2paIssuerVal">OpenAI, LLC</strong></span>
+              <span>Generator: <strong id="c2paGenVal">OpenAI Sora</strong></span>
+              <span id="c2paSourceTypeVal">trainedAlgorithmicMedia</span>
+            </div>
+          </div>
+
+          <!-- ML Model Details Box -->
+          <div id="mlModelDetailsBox" class="hidden verdict-box verdict-box-ml">
+            <div class="verdict-box-title"><i class="fa-solid fa-brain mr-1.5"></i> Trained ML Classifier Active</div>
+            <div class="verdict-box-content">
+              <span>Architecture: <strong id="mlModelTypeVal">Histogram Gradient Boosting</strong></span>
+              <span>Model Probability: <strong id="mlModelProbVal">89.4% AI</strong></span>
+              <span>Ensemble Weight: <strong id="mlModelWeightVal">60% ML + 40% Heuristics</strong></span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Inspector Area: Sticky Video Player + Timeline (Left) & 4 Sequential Forensic Signals (Right) -->
+        <div class="inspector">
+          
+          <!-- Sticky Video Player & Anomaly Timeline Aside -->
+          <aside class="player-sticky">
+            <div class="player-header">
+              <span class="player-label">VIDEO PLAYBACK</span>
+              <span id="currentTimeDisplay" class="player-time">00:00 / 00:00</span>
+            </div>
+
+            <!-- Video Player Box -->
+            <div class="player-video-box">
+              <video id="mainVideoPlayer" controls class="player-video" playsinline></video>
+            </div>
+
+            <!-- Anomaly Timeline Track -->
+            <div class="player-timeline-section">
+              <div class="timeline-meta">
+                <span class="timeline-label">ANOMALY TIMELINE</span>
+                <span id="inspectedFrameTime" class="timeline-frame-time">Frame #1 (0.0s)</span>
+              </div>
+
+              <!-- Interactive scrubber bar showing anomaly spikes -->
+              <div id="timelineContainer" class="timeline-container" role="slider" tabindex="0" aria-label="Forensic anomaly timeline scrubber" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                <!-- Playhead: 1px --ink vertical line, full height -->
+                <div id="timelinePlayhead" class="timeline-playhead"></div>
+              </div>
+
+              <div class="timeline-footer">
+                <span class="timeline-hint">Click anomaly tick to seek frame</span>
+                <span id="frameAnomalyScore" class="timeline-score">0% AI</span>
+              </div>
+            </div>
+
+            <!-- Frame Stepper Controls -->
+            <div class="player-stepper-box">
+              <div class="player-stepper-nav">
+                <button id="prevFrameBtn" class="stepper-btn" aria-label="Previous Frame">
+                  <i class="fa-solid fa-chevron-left"></i> <span>Prev</span>
+                </button>
+                <span id="frameCounterText" class="stepper-counter">Frame 1 of 8</span>
+                <button id="nextFrameBtn" class="stepper-btn" aria-label="Next Frame">
+                  <span>Next</span> <i class="fa-solid fa-chevron-right"></i>
+                </button>
+              </div>
+              <p id="frameInspectorDescription" class="player-explanation">
+                Notice high-frequency periodic grid harmonics and anomalous motion patterns.
+              </p>
+            </div>
+
+            <!-- Hidden compatibility elements required by app.js -->
+            <div class="hidden" style="display:none !important;" aria-hidden="true">
+              <img id="inspectorImage" src="" alt="Forensic View">
+              <div id="inspectorLoading"></div>
+              <button class="filter-btn active" data-filter="original">Original</button>
+              <button class="filter-btn" data-filter="fft">FFT</button>
+              <button class="filter-btn" data-filter="noise">Noise</button>
+              <button class="filter-btn" data-filter="flow">Flow</button>
+            </div>
+          </aside>
+
+          <!-- Right-Hand Flow Column for Signals -->
+          <div class="signals-flow">
+            
+            <!-- Signal 1: 2D Spectral FFT -->
+            <section class="signal" data-reveal data-signal="fft">
+              <div class="signal-info">
+                <span class="signal-eyebrow">01 — SPECTRAL</span>
+                <h2 class="signal-title">Frequency domain</h2>
+                <p class="signal-desc">
+                  Analyzes high-frequency radial Fourier harmonics to uncover periodic artifact grids. Authentic cameras exhibit smooth exponential power falloff, whereas diffusion and generative models leave characteristic mathematical lattice peaks.
+                </p>
+                <div class="signal-metric">
+                  <span class="signal-score-num" id="spectralScoreText">0%</span>
+                  <span class="signal-score-label">anomaly score</span>
+                </div>
+                <!-- Hidden compat nodes for status and progress bar -->
+                <span id="spectralStatusBadge" class="hidden"></span>
+                <div id="spectralScoreBar" class="hidden"></div>
+              </div>
+              <div class="signal-media">
+                <canvas id="fftCanvas" data-canvas="canvas1" role="img" aria-label="2D FFT high-frequency power spectrum heatmap showing periodic radial artifact lattice" class="signal-canvas" width="1280" height="720"></canvas>
+              </div>
+            </section>
+
+            <!-- Signal 2: Optical Flow Motion Vectors -->
+            <section class="signal" data-reveal data-signal="flow">
+              <div class="signal-info">
+                <span class="signal-eyebrow">02 — OPTICAL FLOW</span>
+                <h2 class="signal-title">Motion vectors</h2>
+                <p class="signal-desc">
+                  Tracks inter-frame vector flow fields across consecutive video frames to detect unnatural physical motion. Neural synthesis frequently produces micro-jitter, localized warping, and morphing transitions across temporal sequences.
+                </p>
+                <div class="signal-metric">
+                  <span class="signal-score-num" id="temporalScoreText">0%</span>
+                  <span class="signal-score-label">anomaly score</span>
+                </div>
+                <!-- Hidden compat nodes for status and progress bar -->
+                <span id="temporalStatusBadge" class="hidden"></span>
+                <div id="temporalScoreBar" class="hidden"></div>
+              </div>
+              <div class="signal-media">
+                <canvas id="flowCanvas" data-canvas="canvas2" role="img" aria-label="Optical flow vector field heatmap showing inter-frame motion vector anomalies" class="signal-canvas" width="1280" height="720"></canvas>
+              </div>
+            </section>
+
+            <!-- Signal 3: Sensor Noise Residual (PRNU) -->
+            <section class="signal" data-reveal data-signal="prnu">
+              <div class="signal-info">
+                <span class="signal-eyebrow">03 — SENSOR RESIDUAL</span>
+                <h2 class="signal-title">Sensor noise</h2>
+                <p class="signal-desc">
+                  Measures photo-response non-uniformity and high-pass sensor shot noise unique to physical silicon sensors. Synthetically generated media lacks authentic CMOS sensor grain, exhibiting unnatural smoothing and spatial residual voids.
+                </p>
+                <div class="signal-metric">
+                  <span class="signal-score-num" id="noiseScoreText">0%</span>
+                  <span class="signal-score-label">anomaly score</span>
+                </div>
+                <!-- Hidden compat nodes for status and progress bar -->
+                <span id="noiseStatusBadge" class="hidden"></span>
+                <div id="noiseScoreBar" class="hidden"></div>
+              </div>
+              <div class="signal-media">
+                <canvas id="prnuCanvas" data-canvas="canvas3" role="img" aria-label="PRNU sensor noise residual heatmap showing high-pass shot noise distribution" class="signal-canvas" width="1280" height="720"></canvas>
+              </div>
+            </section>
+
+            <!-- Signal 4: Biometric & Facial Boundaries -->
+            <section class="signal" data-reveal data-signal="face">
+              <div class="signal-info">
+                <span class="signal-eyebrow">04 — BIOMETRICS</span>
+                <h2 class="signal-title">Facial boundaries</h2>
+                <p class="signal-desc">
+                  Inspects facial boundary contours, landmark consistency, and corneal reflection symmetry for deepfake blending seams. Synthetic replacements introduce edge gradient discontinuities and unnatural boundary warping around facial features.
+                </p>
+                <div class="signal-metric">
+                  <span class="signal-score-num" id="facialScoreText">0%</span>
+                  <span class="signal-score-label">anomaly score</span>
+                </div>
+                <!-- Hidden compat nodes for status and progress bar -->
+                <span id="facialStatusBadge" class="hidden"></span>
+                <div id="facialScoreBar" class="hidden"></div>
+              </div>
+              <div class="signal-media">
+                <canvas id="faceCanvas" data-canvas="canvas4" role="img" aria-label="Facial boundary contour heatmap showing biometric boundary seam artifacts" class="signal-canvas" width="1280" height="720"></canvas>
+              </div>
+            </section>
+          </div>
+        </div>
+
+        <!-- Optional Semantic Reasoning Section (Gemini Vision AI) -->
+        <div id="semanticSection" class="hidden bg-slate-900/60 border border-slate-800/80 rounded-2xl p-6 backdrop-blur space-y-3">
+          <div class="flex items-center space-x-2 text-cyan-400 text-xs font-mono uppercase tracking-wider">
+            <i class="fa-solid fa-brain"></i>
+            <span>Vision AI Semantic Forensic Reasoning</span>
+          </div>
+          <p id="semanticAnalysisText" class="text-slate-300 text-sm leading-relaxed font-sans">
+            <!-- Populated via JS if semantic reasoning was active -->
+          </p>
+        </div>
+
+        <!-- Export Footer Section -->
+        <footer class="export" data-reveal>
+          <div class="export-left">
+            <h2 class="export-heading">Take the report with you.</h2>
+            <button id="analyzeAnotherBtn" class="export-reset-link" type="button">
+              ← Analyze another video
+            </button>
+          </div>
+
+          <div class="export-right">
+            <button id="downloadReportBtn" class="export-btn" type="button">
+              <span>Download JSON</span>
+            </button>
+            <button id="printReportBtn" class="export-btn" type="button">
+              <span>Print summary</span>
+            </button>
+          </div>
+        </footer>
+      </section>
+    </main>
+
+    <!-- Settings Modal (Gemini API Key) -->
+    <div id="settingsModal" class="hidden settings-overlay" role="dialog" aria-modal="true" aria-labelledby="settingsModalTitle">
+      <div class="settings-card">
+        <div class="settings-card-header">
+          <div>
+            <span class="settings-eyebrow">CONFIGURATION</span>
+            <h3 id="settingsModalTitle" class="settings-title">Forensic Settings</h3>
+          </div>
+          <button id="closeSettingsBtn" class="settings-close-btn" type="button" aria-label="Close settings">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <div class="settings-card-body">
+          <div class="settings-field">
+            <label for="geminiApiKeyInput" class="settings-label">Google Gemini API Key (Optional)</label>
+            <input type="password" id="geminiApiKeyInput" placeholder="AIzaSy..." class="settings-input" autocomplete="off">
+            <p class="settings-help">
+              Enables deep multimodal reasoning (physics violations, shadow angles, and morphing). Core mathematical forensic analysis runs locally without any API key.
+            </p>
+          </div>
+
+          <div class="settings-field">
+            <label for="samplingDensitySelect" class="settings-label">Frame Sampling Density</label>
+            <select id="samplingDensitySelect" class="settings-select">
+              <option value="8">Standard (8 keyframes - Fast)</option>
+              <option value="16" selected>Detailed (16 keyframes - Recommended)</option>
+              <option value="24">Deep Forensic (24 keyframes - Thorough)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="settings-card-footer">
+          <button id="cancelSettingsBtn" class="settings-btn-cancel" type="button">Close</button>
+          <button id="saveSettingsBtn" class="settings-btn-save" type="button">Save Settings</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Model Training & Dataset Modal -->
+    <div id="modelModal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full p-6 sm:p-8 space-y-6 shadow-2xl my-8 max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+          <div class="flex items-center space-x-3">
+            <div class="w-9 h-9 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
+              <i class="fa-solid fa-brain text-lg"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-white text-base">Custom Model & Video Dataset</h3>
+              <p class="text-xs text-slate-400 font-mono">Train your own machine learning classifier on custom video datasets</p>
+            </div>
+          </div>
+          <button id="closeModelModalBtn" class="text-slate-400 hover:text-white text-sm p-1">
+            <i class="fa-solid fa-xmark text-lg"></i>
+          </button>
+        </div>
+
+        <!-- Model Status Banner -->
+        <div id="modelStatusBanner" class="p-4 rounded-xl bg-slate-950/80 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="flex items-center space-x-3">
+            <div id="modelStatusDot" class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></div>
+            <div>
+              <div class="flex items-center space-x-2">
+                <span id="modelStatusText" class="font-bold text-sm text-white">Custom Model Active</span>
+                <span id="modelTypeBadge" class="px-2 py-0.5 rounded text-[10px] font-mono bg-purple-500/20 text-purple-300 border border-purple-500/30">HistGradientBoosting</span>
+              </div>
+              <p id="modelTrainedDate" class="text-[11px] text-slate-400 font-mono">Trained on 6 videos</p>
+            </div>
+          </div>
+          <button id="refreshModelStatusBtn" class="self-start sm:self-auto text-xs font-mono text-cyan-400 hover:text-cyan-300 flex items-center space-x-1">
+            <i class="fa-solid fa-rotate-right"></i>
+            <span>Refresh</span>
+          </button>
+        </div>
+
+        <!-- Dataset Overview & Upload Section -->
+        <div class="space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-mono text-slate-300 uppercase tracking-wider font-semibold">Video Dataset (dataset/)</span>
+            <span id="datasetTotalCountText" class="text-xs font-mono text-slate-400">6 Total Videos</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <!-- Real Videos Card -->
+            <div class="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-3">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2 text-emerald-400 text-xs font-bold">
+                  <i class="fa-solid fa-camera"></i>
+                  <span>Authentic (Real) Videos</span>
+                </div>
+                <span id="realCountBadge" class="px-2 py-0.5 rounded-full text-xs font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold">3</span>
+              </div>
+              <p class="text-[11px] text-slate-400">Videos captured directly by camera sensors in <code class="text-slate-300 font-mono text-[10px]">dataset/real/</code></p>
+              
+              <label class="block cursor-pointer">
+                <input type="file" id="uploadRealInput" accept="video/mp4,video/webm,video/quicktime" class="hidden">
+                <div class="w-full py-2 px-3 rounded-lg border border-dashed border-emerald-500/40 hover:border-emerald-500 hover:bg-emerald-950/20 text-center text-xs text-emerald-400 transition flex items-center justify-center space-x-1.5">
+                  <i class="fa-solid fa-plus text-[10px]"></i>
+                  <span>Add Video to Real Dataset</span>
+                </div>
+              </label>
+            </div>
+
+            <!-- AI Videos Card -->
+            <div class="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-3">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2 text-purple-400 text-xs font-bold">
+                  <i class="fa-solid fa-robot"></i>
+                  <span>AI-Generated Videos</span>
+                </div>
+                <span id="aiCountBadge" class="px-2 py-0.5 rounded-full text-xs font-mono bg-purple-500/10 text-purple-400 border border-purple-500/20 font-bold">3</span>
+              </div>
+              <p class="text-[11px] text-slate-400">Synthetic videos (Sora, Runway, Kling) in <code class="text-slate-300 font-mono text-[10px]">dataset/ai/</code></p>
+              
+              <label class="block cursor-pointer">
+                <input type="file" id="uploadAIInput" accept="video/mp4,video/webm,video/quicktime" class="hidden">
+                <div class="w-full py-2 px-3 rounded-lg border border-dashed border-purple-500/40 hover:border-purple-500 hover:bg-purple-950/20 text-center text-xs text-purple-400 transition flex items-center justify-center space-x-1.5">
+                  <i class="fa-solid fa-plus text-[10px]"></i>
+                  <span>Add Video to AI Dataset</span>
+                </div>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Training Configuration & Trigger -->
+        <div class="p-4 rounded-xl bg-slate-950/90 border border-slate-800 space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <span class="text-xs font-mono text-slate-300 uppercase tracking-wider font-semibold">Train Custom Classifier</span>
+              <p class="text-[11px] text-slate-400">Extracts 24 forensic features per video and trains an ensemble classifier with cross-validation.</p>
+            </div>
+            <div class="flex items-center space-x-2">
+              <select id="trainModelTypeSelect" class="px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-slate-200 text-xs font-mono focus:border-purple-500 focus:outline-none">
+                <option value="hist_gb">Hist Gradient Boosting</option>
+                <option value="random_forest">Random Forest</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-900">
+            <button id="generateSamplesBtn" class="px-3 py-2 text-xs font-mono rounded-lg border border-slate-700 hover:bg-slate-800 text-slate-300 transition flex items-center space-x-1.5" title="Generate synthetic samples for immediate testing">
+              <i class="fa-solid fa-wand-magic-sparkles text-cyan-400"></i>
+              <span>Generate Calibration Samples</span>
+            </button>
+
+            <button id="startTrainingBtn" class="px-5 py-2 text-xs font-bold font-mono rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-lg shadow-purple-500/20 transition flex items-center space-x-2">
+              <i class="fa-solid fa-play"></i>
+              <span>Train Model Now</span>
+            </button>
+          </div>
+
+          <!-- Training Progress Feedback -->
+          <div id="trainingStatusBox" class="hidden p-3 rounded-lg bg-purple-950/30 border border-purple-500/30 text-xs font-mono text-purple-300 flex items-center space-x-2">
+            <i class="fa-solid fa-spinner fa-spin text-sm"></i>
+            <span id="trainingStatusText">Extracting forensic features and training pipeline...</span>
+          </div>
+        </div>
+
+        <!-- Model Performance Metrics Card (Populated when model is trained) -->
+        <div id="modelMetricsSection" class="space-y-4">
+          <span class="text-xs font-mono text-slate-300 uppercase tracking-wider font-semibold">Trained Model Performance (Holdout Evaluation)</span>
+          
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center font-mono">
+            <div class="p-3 rounded-xl bg-slate-950 border border-slate-800">
+              <div class="text-[10px] text-slate-500 uppercase">Test Accuracy</div>
+              <div id="metricAccuracy" class="text-base font-bold text-emerald-400">100%</div>
+            </div>
+            <div class="p-3 rounded-xl bg-slate-950 border border-slate-800">
+              <div class="text-[10px] text-slate-500 uppercase">ROC-AUC</div>
+              <div id="metricRocAuc" class="text-base font-bold text-cyan-400">1.000</div>
+            </div>
+            <div class="p-3 rounded-xl bg-slate-950 border border-slate-800">
+              <div class="text-[10px] text-slate-500 uppercase">F1-Score</div>
+              <div id="metricF1" class="text-base font-bold text-purple-400">1.000</div>
+            </div>
+            <div class="p-3 rounded-xl bg-slate-950 border border-slate-800">
+              <div class="text-[10px] text-slate-500 uppercase">Cross-Val</div>
+              <div id="metricCv" class="text-base font-bold text-slate-200">100%</div>
+            </div>
+          </div>
+
+          <!-- Top Features Ranking -->
+          <div class="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2.5">
+            <span class="text-[11px] font-mono text-slate-400 uppercase tracking-wider block">Top Predictive Forensic Features</span>
+            <div id="topFeaturesList" class="space-y-2 text-xs font-mono">
+              <!-- Populated via JS -->
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800/80 py-6 text-center text-xs font-mono text-slate-500">
+      <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+        <span>VeritasVideo • AI Forensics & Synthetic Video Detection Lab</span>
+        <span class="text-slate-600">Pure Local Mathematical Forensics + Optional Vision Intelligence</span>
+      </div>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+  <script type="module">
+    import { revealInit, revealStagger, parallaxSubtle } from './js/motion.js';
+    import { setupDragEvents } from './js/upload.js';
+
+    document.addEventListener('DOMContentLoaded', () => {
+      revealStagger();
+      revealInit();
+      parallaxSubtle();
+
+      // Ensure editorial dragover state is bound to dropzone
+      const dropZone = document.getElementById('dropZone');
+      if (dropZone) {
+        setupDragEvents(dropZone);
+      }
+
+      // Automatically re-observe dynamic reveal elements when results dashboard opens
+      const resultsEl = document.getElementById('resultsDashboard');
+      if (resultsEl) {
+        const observer = new MutationObserver(() => {
+          if (!resultsEl.classList.contains('hidden')) {
+            revealInit();
+          }
+        });
+        observer.observe(resultsEl, { attributes: true, attributeFilter: ['class'] });
+      }
+    });
+  </script>
+</body>
+</html>

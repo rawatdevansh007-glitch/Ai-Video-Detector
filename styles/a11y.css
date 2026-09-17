@@ -1,0 +1,108 @@
+/**
+ * VeritasVideo Accessibility (a11y) Stylesheet
+ * WCAG AA Conformance, Accessible Focus Rings, Contrast Hardening, and Universal Reduced Motion
+ */
+
+/* ==========================================================================
+   1. Contrast Hardening (WCAG AA & AAA compliant)
+   - Baseline #6B6660 on #F4F1EC (--bone) yields 5.05:1 (passes AA >= 4.5:1).
+   - Hardened #524F4A on #F4F1EC (--bone) yields 7.2:1 (passes AAA >= 7.0:1).
+   - High-contrast muted on dark surfaces #A8A29E on #0A0D14 yields 8.5:1 (passes AAA).
+   ========================================================================== */
+:root {
+  --muted-bone: #524F4A;    /* 7.2:1 on --bone (#F4F1EC) */
+  --muted-dark: #A8A29E;    /* 8.5:1 on #0A0D14 */
+  --focus-ring-color: var(--ink, #0A0A0A);
+  --focus-ring-offset: 2px;
+}
+
+/* Light surfaces (editorial bone) */
+.settings-overlay,
+.settings-card,
+[data-theme="light"] {
+  --muted: var(--muted-bone);
+}
+
+/* ==========================================================================
+   2. Visible Focus Rings (2px --ink, 2px offset)
+   ========================================================================== */
+:focus-visible {
+  outline: 2px solid var(--ink, #0A0A0A) !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 4px rgba(244, 241, 236, 0.45) !important;
+}
+
+/* Enhanced focus outline for interactive controls */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[role="button"]:focus-visible,
+[role="slider"]:focus-visible,
+[tabindex="0"]:focus-visible {
+  outline: 2px solid var(--ink, #0A0A0A) !important;
+  outline-offset: 2px !important;
+}
+
+/* Settings modal internal focus ring */
+.settings-card :focus-visible,
+.settings-overlay :focus-visible {
+  outline: 2px solid var(--ink, #0A0A0A) !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 3px rgba(10, 10, 10, 0.15) !important;
+}
+
+/* ==========================================================================
+   3. Drag-Drop Zone Keyboard Focus & Active States
+   ========================================================================== */
+.hero-dropzone:focus-visible,
+#dropZone:focus-visible {
+  outline: 2px solid var(--anomaly, #B33A2E) !important;
+  outline-offset: 4px !important;
+  border-bottom: 2px solid var(--anomaly, #B33A2E) !important;
+}
+
+/* ==========================================================================
+   4. Anomaly Timeline Scrubber Keyboard Focus & State
+   ========================================================================== */
+.timeline-container:focus-visible,
+#timelineContainer:focus-visible {
+  outline: 2px solid var(--ink, #0A0A0A) !important;
+  outline-offset: 4px !important;
+  box-shadow: 0 0 0 4px rgba(244, 241, 236, 0.4) !important;
+  border-radius: 2px;
+}
+
+/* ==========================================================================
+   5. Canvas Semantic Presentation
+   ========================================================================== */
+canvas.signal-canvas {
+  display: block;
+  max-width: 100%;
+}
+
+/* ==========================================================================
+   6. Universal Reduced Motion Overrides
+   All [data-reveal] and [data-parallax] elements become instant.
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  [data-reveal],
+  [data-reveal].is-visible,
+  [data-reveal-stagger] > *,
+  [data-parallax] {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+    animation: none !important;
+  }
+}
