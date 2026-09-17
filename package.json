@@ -1,0 +1,9 @@
+{
+  "name": "ai-video-detector",
+  "version": "2.0.0",
+  "private": true,
+  "description": "VeritasVideo AI Video Forensics & Deepfake Detection Studio",
+  "scripts": {
+    "build": "echo 'VeritasVideo static deployment ready'"
+  }
+}
