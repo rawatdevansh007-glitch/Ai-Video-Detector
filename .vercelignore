@@ -1,0 +1,17 @@
+# Ignore Python backend, tests, and heavy ML files for Vercel static deployment
+backend/
+tests/
+dataset/
+cache/
+.venv/
+requirements.txt
+Dockerfile
+render.yaml
+train.py
+create_samples.py
+run.bat
+run.ps1
+*.py
+*.pyc
+__pycache__/
+.pytest_cache/
