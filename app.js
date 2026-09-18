@@ -1487,10 +1487,10 @@ document.addEventListener('DOMContentLoaded', () => {
       c2paReason = "C2PA ClaimGenerator declared synthetic provenance (trainedAlgorithmicMedia)";
     }
 
-    // Weights configuration (Requirements 1 & 4 - CNN-favored)
-    let baseWeights = { biometric: 0.70, optical_flow: 0.15, fft: 0.05, prnu: 0.10 };
+    // Weights configuration (CNN-favored)
+    let baseWeights = { biometric: 0.70, optical_flow: 0.15, prnu: 0.10, fft: 0.05 };
     if (isHeavyCompression) {
-      baseWeights = { biometric: 0.725, optical_flow: 0.175, fft: 0.0, prnu: 0.10 };
+      baseWeights = { biometric: 0.75, optical_flow: 0.15, prnu: 0.10, fft: 0.00 };
     }
 
     const frameResults = [];
@@ -1662,7 +1662,7 @@ document.addEventListener('DOMContentLoaded', () => {
     finalAnomalyScore = Math.min(1.0, Math.max(0.0, finalAnomalyScore));
 
     let verdict, confidenceLevel, summaryExplanation;
-    if (finalAnomalyScore > 0.65) {
+    if (finalAnomalyScore > 0.70) {
       verdict = "AI_GENERATED";
       confidenceLevel = finalAnomalyScore >= 0.75 ? "High" : "Moderate";
       const compNote = isHeavyCompression ? " [Heavy Compression Mitigated]" : "";

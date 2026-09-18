@@ -28,6 +28,55 @@ DEFAULT_FORENSIC_WEIGHTS = {
 }
 
 
+def calculate_final_verdict(module_scores, low_bitrate=False):
+    """
+    Calculates the final ensemble anomaly score to prevent false positives.
+    
+    Args:
+        module_scores (dict): A dictionary containing raw scores (0.0 to 1.0) 
+                              from each forensic module.
+        low_bitrate (bool): Flag indicating if the video is heavily compressed.
+        
+    Returns:
+        dict: The final score, verdict, and the weights used for frontend display.
+    """
+    # Default weights heavily favoring the biometric CNN to reduce false positives
+    weights = {
+        'biometric': 0.70,
+        'optical_flow': 0.15,
+        'prnu': 0.10,
+        'fft': 0.05
+    }
+
+    # Dynamically adjust weights if heavy video compression is detected
+    # Social media compression destroys FFT data, causing false positives
+    if low_bitrate:
+        weights['fft'] = 0.00
+        weights['biometric'] = 0.75
+        weights['optical_flow'] = 0.15
+        weights['prnu'] = 0.10
+
+    # Calculate the weighted sum
+    final_anomaly_score = (
+        (module_scores.get('biometric', 0) * weights['biometric']) +
+        (module_scores.get('optical_flow', 0) * weights['optical_flow']) +
+        (module_scores.get('prnu', 0) * weights['prnu']) +
+        (module_scores.get('fft', 0) * weights['fft'])
+    )
+
+    # Shift threshold to 0.70 to protect authentic videos from being flagged
+    decision_threshold = 0.70
+    is_ai_generated = final_anomaly_score > decision_threshold
+
+    return {
+        "final_anomaly_score": round(final_anomaly_score * 100, 2),  # Return as percentage
+        "is_ai_generated": is_ai_generated,
+        "verdict_label": "AI-Generated" if is_ai_generated else "Real",
+        "applied_weights": weights,
+        "confidence_threshold": decision_threshold
+    }
+
+
 def adjust_weights_for_compression(
     weights: Dict[str, float],
     is_heavy_compression: bool
@@ -35,17 +84,14 @@ def adjust_weights_for_compression(
     """
     Requirement 4: Video Compression Mitigation
     If heavy video compression is detected (< 2 Mbps for 1080p equivalent),
-    decrease the fft weight (up to 0.05) to reduce compression high-frequency false alarms,
-    and distribute it equally to biometric (+0.025) and optical_flow (+0.025), preserving sum = 1.0.
+    zero out FFT weight and assign to biometric (0.75 biometric, 0.15 optical_flow, 0.10 prnu, 0.00 fft).
     """
     adjusted = dict(weights)
     if is_heavy_compression:
-        reduction = min(adjusted.get('fft', 0.05), 0.05)
-        adjusted['fft'] = max(0.0, round(adjusted['fft'] - reduction, 4))
-        half_shift = round(reduction / 2.0, 4)
-        adjusted['biometric'] = round(adjusted['biometric'] + half_shift, 4)
-        adjusted['optical_flow'] = round(adjusted['optical_flow'] + (reduction - half_shift), 4)
-        adjusted['prnu'] = round(adjusted['prnu'], 4)
+        adjusted['fft'] = 0.00
+        adjusted['biometric'] = 0.75
+        adjusted['optical_flow'] = 0.15
+        adjusted['prnu'] = 0.10
         return adjusted, True
     return adjusted, False
 
@@ -55,7 +101,7 @@ def calculate_weighted_ensemble_score(
     weights: Optional[Dict[str, float]] = None
 ) -> Tuple[float, Dict[str, float]]:
     r"""
-    Requirement 1: Calculates the final anomaly score using \sum_{i=1}^n (w_i * A_i).
+    Calculates the final anomaly score using \sum_{i=1}^n (w_i * A_i).
     """
     applied_weights = dict(weights if weights is not None else DEFAULT_FORENSIC_WEIGHTS)
     total_score = sum(applied_weights.get(k, 0.0) * float(scores.get(k, 0.0)) for k in applied_weights)
@@ -344,9 +390,11 @@ class ForensicEngine:
             'prnu': comb_noise
         }
 
-        # Requirement 1: Calculate Applied Weights & Final Anomaly Score using \sum (w_i * A_i)
+        # Requirement 1: Calculate Applied Weights & Final Anomaly Score using calculate_final_verdict
         if faces_detected_count > 0:
-            applied_weights = dict(base_weights)
+            verdict_res = calculate_final_verdict(domain_scores, low_bitrate=is_heavy_compression)
+            final_anomaly_score = float(np.clip(verdict_res["final_anomaly_score"] / 100.0, 0.0, 1.0))
+            applied_weights = verdict_res["applied_weights"]
         else:
             # When video has no human subjects, redistribute weights across active optical signals
             active_sum = base_weights['optical_flow'] + base_weights['fft'] + base_weights['prnu']
@@ -360,6 +408,21 @@ class ForensicEngine:
             else:
                 applied_weights = dict(base_weights)
 
+            final_anomaly_score = sum(applied_weights[k] * domain_scores[k] for k in applied_weights)
+            final_anomaly_score = float(np.clip(final_anomaly_score, 0.0, 1.0))
+            decision_threshold = 0.70
+            verdict_res = {
+                "final_anomaly_score": round(final_anomaly_score * 100, 2),
+                "is_ai_generated": final_anomaly_score > decision_threshold,
+                "verdict_label": "AI-Generated" if final_anomaly_score > decision_threshold else "Real",
+                "applied_weights": applied_weights,
+                "confidence_threshold": decision_threshold
+            }
+
+        is_ai_generated = verdict_res["is_ai_generated"]
+        verdict_label = verdict_res["verdict_label"]
+        decision_threshold = verdict_res["confidence_threshold"]
+
         # Requirement 5: Add Raw Score Debugging Output right before final score calculation
         print("\n" + "=" * 56)
         print("[DEBUG FORENSIC DETECTORS - RAW MODULE SCORES]")
@@ -368,11 +431,10 @@ class ForensicEngine:
         print(f"  FFT (Spectral) Score         : {domain_scores['fft']:.4f}")
         print(f"  PRNU (Noise Residual) Score  : {domain_scores['prnu']:.4f}")
         print(f"  Applied Ensemble Weights     : {applied_weights}")
+        print(f"  Calculated Score             : {final_anomaly_score:.4f} ({verdict_res['final_anomaly_score']}%)")
+        print(f"  Decision Threshold           : {decision_threshold:.2f}")
+        print(f"  Verdict Label                : {verdict_label}")
         print("=" * 56 + "\n")
-
-        # Calculate final anomaly score using \sum_{i=1}^n (w_i * A_i)
-        final_anomaly_score = sum(applied_weights[k] * domain_scores[k] for k in applied_weights)
-        final_anomaly_score = float(np.clip(final_anomaly_score, 0.0, 1.0))
 
         # Check for trained custom ML model pipeline package if present
         is_trained_ml_present = bool(self.model_pkg is not None and "pipeline" in self.model_pkg and use_custom_model)
@@ -397,6 +459,8 @@ class ForensicEngine:
             ml_prob = final_anomaly_score
 
         final_anomaly_score = float(np.clip(final_anomaly_score, 0.0, 1.0))
+        is_ai_generated = final_anomaly_score > decision_threshold
+        verdict_label = "AI-Generated" if is_ai_generated else "Real"
 
         # Requirement 2: Dynamically state architecture as 'PyTorch ResNet-50 (Cross-Verified)'
         ml_model_info = {
@@ -409,11 +473,11 @@ class ForensicEngine:
             "applied_weights": applied_weights
         }
 
-        # Requirement 3: Verdict Classification with Sigmoid Decision Threshold > 0.65
-        if final_anomaly_score > 0.65:
+        # Shift threshold to 0.70 to protect authentic videos from being flagged
+        if is_ai_generated:
             verdict = "AI_GENERATED"
             confidence_level = "High" if final_anomaly_score >= 0.75 else "Moderate"
-            mitigate_note = " [Heavy Compression Mitigated]" if compression_mitigated else ""
+            mitigate_note = " [Heavy Compression Mitigated]" if is_heavy_compression else ""
             summary_explanation = (
                 f"Video exhibits strong mathematical indicators of synthetic AI generation "
                 f"(Confidence: {int(final_anomaly_score * 100)}%{mitigate_note}). "
@@ -455,12 +519,16 @@ class ForensicEngine:
         result = {
             "analysis_id": analysis_id,
             "verdict": verdict,
+            "is_ai_generated": is_ai_generated,
+            "verdict_label": verdict_label,
+            "confidence_threshold": decision_threshold,
             "final_anomaly_score": round(final_anomaly_score, 3),
+            "final_anomaly_score_pct": round(final_anomaly_score * 100, 2),
             # Backward-compatibility alias
             "composite_ai_score": round(final_anomaly_score, 3),
             "applied_weights": applied_weights,
-            "compression_mitigation_applied": compression_mitigated,
-            "low_bitrate_flag": compression_mitigated,
+            "compression_mitigation_applied": is_heavy_compression,
+            "low_bitrate_flag": is_heavy_compression,
             "confidence_level": confidence_level,
             "detection_method": detection_method,
             "visual_scan_bypassed": False,

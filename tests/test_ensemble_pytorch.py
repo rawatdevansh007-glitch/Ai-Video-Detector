@@ -229,8 +229,8 @@ class TestWeightedEnsembleAndPyTorch(unittest.TestCase):
         
         self.assertTrue(is_mitigated)
         self.assertAlmostEqual(adj_weights['fft'], 0.0, places=4)
-        self.assertAlmostEqual(adj_weights['biometric'], 0.725, places=4)
-        self.assertAlmostEqual(adj_weights['optical_flow'], 0.175, places=4)
+        self.assertAlmostEqual(adj_weights['biometric'], 0.75, places=4)
+        self.assertAlmostEqual(adj_weights['optical_flow'], 0.15, places=4)
         self.assertAlmostEqual(adj_weights['prnu'], 0.10, places=4)
         self.assertAlmostEqual(sum(adj_weights.values()), 1.0, places=5)
 
@@ -291,15 +291,39 @@ class TestWeightedEnsembleAndPyTorch(unittest.TestCase):
         self.assertIsNotNone(tensor)
         self.assertEqual(tensor.shape, (1, 3, 224, 224))
 
-    def test_verdict_decision_threshold_at_065(self):
-        """Verifies videos are classified as AI_GENERATED only when score > 0.65."""
-        # Check classification at boundary
-        # Under new rule: score <= 0.65 should NOT be AI_GENERATED (e.g. SUSPICIOUS)
-        # score > 0.65 should be AI_GENERATED
+    def test_verdict_decision_threshold_at_070(self):
+        """Verifies videos are classified as AI_GENERATED only when score > 0.70."""
         real_video = os.path.join(self.samples_dir, "authentic_camera_sample.mp4")
         result = self.engine.analyze_video(real_video, sample_count=4, use_custom_model=False)
         self.assertNotEqual(result["verdict"], "AI_GENERATED")
-        self.assertLessEqual(result["final_anomaly_score"], 0.65)
+        self.assertFalse(result["is_ai_generated"])
+        self.assertEqual(result["verdict_label"], "Real")
+        self.assertLessEqual(result["final_anomaly_score"], 0.70)
+
+    def test_calculate_final_verdict_function(self):
+        """Verifies calculate_final_verdict returns expected structure, weights, and 0.70 threshold."""
+        from engine import calculate_final_verdict
+        
+        # Test default weights on authentic-like scores
+        real_scores = {'biometric': 0.10, 'optical_flow': 0.15, 'prnu': 0.10, 'fft': 0.05}
+        # expected: 0.10*0.70 + 0.15*0.15 + 0.10*0.10 + 0.05*0.05 = 0.07 + 0.0225 + 0.01 + 0.0025 = 0.105 -> 10.5%
+        res_real = calculate_final_verdict(real_scores, low_bitrate=False)
+        self.assertEqual(res_real["applied_weights"], {'biometric': 0.70, 'optical_flow': 0.15, 'prnu': 0.10, 'fft': 0.05})
+        self.assertEqual(res_real["confidence_threshold"], 0.70)
+        self.assertFalse(res_real["is_ai_generated"])
+        self.assertEqual(res_real["verdict_label"], "Real")
+        self.assertEqual(res_real["final_anomaly_score"], 10.5)
+
+        # Test compression (low_bitrate=True)
+        res_comp = calculate_final_verdict(real_scores, low_bitrate=True)
+        self.assertEqual(res_comp["applied_weights"], {'biometric': 0.75, 'optical_flow': 0.15, 'prnu': 0.10, 'fft': 0.00})
+
+        # Test AI scores above 0.70 threshold
+        ai_scores = {'biometric': 0.90, 'optical_flow': 0.80, 'prnu': 0.85, 'fft': 0.75}
+        res_ai = calculate_final_verdict(ai_scores, low_bitrate=False)
+        self.assertTrue(res_ai["is_ai_generated"])
+        self.assertEqual(res_ai["verdict_label"], "AI-Generated")
+        self.assertGreater(res_ai["final_anomaly_score"], 70.0)
 
 
 if __name__ == "__main__":
